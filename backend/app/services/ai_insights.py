@@ -3,7 +3,7 @@ import json
 import os
 from app.models.schemas import InsightRequest, InsightResponse, ChatRequest, ChatResponse, CategoryBreakdown
 
-_GEMINI_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent"
+_GEMINI_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent"
 _GLOBAL_AVG_KG = 4000.0
 _INDIA_AVG_KG = 1800.0
 
@@ -72,7 +72,7 @@ async def generate_insights(req: InsightRequest) -> InsightResponse:
     try:
         prompt = _build_insight_prompt(req)
         raw = _call_gemini(prompt)
-        if raw.startswith("```"):
+        if "```" in raw:
             raw = raw.split("```")[1]
             if raw.startswith("json"):
                 raw = raw[4:]
@@ -103,15 +103,16 @@ async def chat_with_ecobot(req: ChatRequest) -> ChatResponse:
     if fp:
         context = f"\nUser footprint: Transport {fp.transport:.0f}, Home {fp.home_energy:.0f}, Diet {fp.diet:.0f}, Shopping {fp.shopping:.0f}, Total {fp.total:.0f} kg CO2e/year (India avg: 1800, Global avg: 4000)"
 
-    system = f"""You are EcoBot, an expert carbon footprint coach. 
-Keep responses under 150 words, warm and actionable.
-Never make up statistics.{context}"""
-
     last_msg = req.messages[-1].content
-    full_prompt = f"{system}\n\nUser: {last_msg}\nEcoBot:"
+    full_prompt = f"""You are EcoBot, an expert carbon footprint coach.
+Keep responses under 150 words, warm and actionable.
+Never make up statistics.{context}
+
+User: {last_msg}
+EcoBot:"""
 
     try:
         reply = _call_gemini(full_prompt, max_tokens=300)
         return ChatResponse(reply=reply)
-    except Exception:
-        return ChatResponse(reply="I'm having trouble connecting right now. Please try again in a moment.")
+    except Exception as e:
+        return ChatResponse(reply=f"I'm having trouble connecting right now. Please try again in a moment.")

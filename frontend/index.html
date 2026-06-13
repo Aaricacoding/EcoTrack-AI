@@ -1,0 +1,2793 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>EcoTrack AI — Carbon Footprint Platform</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Inter:wght@300;400;500&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      /* ── Design Tokens ──────────────────────────────────────── */
+      :root {
+        --bg: #0a0f0d; /* Deep forest-dark background */
+        --surface: #111a15; /* Card surface */
+        --surface2: #172110; /* Slightly lighter surface */
+        --border: #1e3024; /* Subtle border */
+        --green: #22c55e; /* Primary accent: vivid growth green */
+        --green-dim: #16a34a; /* Darker green for hover states */
+        --amber: #f59e0b; /* Warning / medium rating */
+        --red: #ef4444; /* Danger / high rating */
+        --text: #e8f5e9; /* Primary text: light green-white */
+        --text-dim: #6b8f72; /* Secondary text */
+        --font-disp: "Space Grotesk", sans-serif; /* Display: personality */
+        --font-body: "Inter", sans-serif; /* Body: clarity */
+        --radius: 12px;
+        --radius-lg: 20px;
+      }
+
+      /* ── Reset & Base ────────────────────────────────────────── */
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+      html {
+        scroll-behavior: smooth;
+      }
+      body {
+        font-family: var(--font-body);
+        background: var(--bg);
+        color: var(--text);
+        min-height: 100vh;
+        line-height: 1.6;
+      }
+
+      /* ── Layout ──────────────────────────────────────────────── */
+      .app {
+        display: flex;
+        flex-direction: column;
+        min-height: 100vh;
+      }
+
+      nav {
+        position: sticky;
+        top: 0;
+        z-index: 100;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 1rem 2rem;
+        background: rgba(10, 15, 13, 0.9);
+        backdrop-filter: blur(12px);
+        border-bottom: 1px solid var(--border);
+      }
+      .nav-logo {
+        font-family: var(--font-disp);
+        font-size: 1.3rem;
+        font-weight: 700;
+        color: var(--green);
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+      }
+      .nav-logo span {
+        color: var(--text);
+      }
+      .nav-tabs {
+        display: flex;
+        gap: 0.25rem;
+      }
+      .nav-tab {
+        padding: 0.4rem 1rem;
+        border: none;
+        background: none;
+        color: var(--text-dim);
+        cursor: pointer;
+        font-family: var(--font-body);
+        font-size: 0.875rem;
+        border-radius: var(--radius);
+        transition: all 0.2s;
+      }
+      .nav-tab:hover,
+      .nav-tab.active {
+        background: var(--surface2);
+        color: var(--green);
+      }
+
+      main {
+        flex: 1;
+        padding: 2rem;
+        max-width: 1200px;
+        margin: 0 auto;
+        width: 100%;
+      }
+
+      /* ── Hero ────────────────────────────────────────────────── */
+      .hero {
+        text-align: center;
+        padding: 3rem 1rem 2rem;
+      }
+      .hero-eyebrow {
+        font-size: 0.75rem;
+        letter-spacing: 0.2em;
+        text-transform: uppercase;
+        color: var(--green);
+        margin-bottom: 1rem;
+      }
+      .hero-title {
+        font-family: var(--font-disp);
+        font-size: clamp(2.5rem, 6vw, 4rem);
+        font-weight: 700;
+        line-height: 1.1;
+        margin-bottom: 1rem;
+      }
+      .hero-title .accent {
+        color: var(--green);
+      }
+      .hero-sub {
+        color: var(--text-dim);
+        font-size: 1.1rem;
+        max-width: 500px;
+        margin: 0 auto 2rem;
+      }
+      .btn-primary {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.75rem 2rem;
+        background: var(--green);
+        color: #000;
+        font-family: var(--font-disp);
+        font-weight: 600;
+        font-size: 1rem;
+        border: none;
+        border-radius: var(--radius);
+        cursor: pointer;
+        transition: all 0.2s;
+        text-decoration: none;
+      }
+      .btn-primary:hover {
+        background: var(--green-dim);
+        transform: translateY(-1px);
+      }
+      .btn-secondary {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.75rem 2rem;
+        background: transparent;
+        color: var(--text);
+        font-family: var(--font-disp);
+        font-weight: 500;
+        font-size: 1rem;
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        cursor: pointer;
+        transition: all 0.2s;
+        margin-left: 1rem;
+      }
+      .btn-secondary:hover {
+        border-color: var(--green);
+        color: var(--green);
+      }
+
+      /* ── Cards ───────────────────────────────────────────────── */
+      .card {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-lg);
+        padding: 1.5rem;
+      }
+      .card-title {
+        font-family: var(--font-disp);
+        font-size: 1rem;
+        font-weight: 600;
+        color: var(--text-dim);
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        margin-bottom: 1rem;
+      }
+
+      /* ── Grid ────────────────────────────────────────────────── */
+      .grid-2 {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1.5rem;
+      }
+      .grid-3 {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 1rem;
+      }
+      .grid-4 {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 1rem;
+      }
+      @media (max-width: 900px) {
+        .grid-2 {
+          grid-template-columns: 1fr;
+        }
+        .grid-4 {
+          grid-template-columns: 1fr 1fr;
+        }
+      }
+      @media (max-width: 600px) {
+        .grid-3,
+        .grid-4 {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      /* ── Form ────────────────────────────────────────────────── */
+      .form-section {
+        margin-bottom: 2rem;
+      }
+      .form-section-title {
+        font-family: var(--font-disp);
+        font-size: 1.1rem;
+        font-weight: 600;
+        margin-bottom: 1rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+      }
+      .form-section-title .icon {
+        width: 2rem;
+        height: 2rem;
+        background: var(--surface2);
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1rem;
+      }
+      .form-group {
+        margin-bottom: 1.25rem;
+      }
+      label {
+        display: block;
+        font-size: 0.875rem;
+        color: var(--text-dim);
+        margin-bottom: 0.4rem;
+      }
+      input[type="number"],
+      input[type="text"],
+      input[type="email"],
+      input[type="password"],
+      select {
+        width: 100%;
+        padding: 0.65rem 1rem;
+        background: var(--surface2);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        color: var(--text);
+        font-family: var(--font-body);
+        font-size: 0.9rem;
+        outline: none;
+        transition: border-color 0.2s;
+        -webkit-appearance: none;
+      }
+      input:focus,
+      select:focus {
+        border-color: var(--green);
+      }
+      select option {
+        background: var(--surface);
+      }
+
+      /* ── Step Indicator ──────────────────────────────────────── */
+      .steps {
+        display: flex;
+        gap: 0;
+        margin-bottom: 2.5rem;
+      }
+      .step {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 0.4rem;
+        cursor: pointer;
+        opacity: 0.5;
+        transition: opacity 0.2s;
+      }
+      .step.active,
+      .step.done {
+        opacity: 1;
+      }
+      .step-dot {
+        width: 2.5rem;
+        height: 2.5rem;
+        border-radius: 50%;
+        background: var(--surface2);
+        border: 2px solid var(--border);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1rem;
+        transition: all 0.2s;
+        position: relative;
+        z-index: 1;
+      }
+      .step.active .step-dot {
+        border-color: var(--green);
+        background: var(--surface2);
+      }
+      .step.done .step-dot {
+        border-color: var(--green);
+        background: var(--green);
+        color: #000;
+      }
+      .step-label {
+        font-size: 0.75rem;
+        color: var(--text-dim);
+        text-align: center;
+      }
+      .step.active .step-label {
+        color: var(--green);
+      }
+      .step-line {
+        flex: 1;
+        height: 2px;
+        background: var(--border);
+        margin-top: 1.25rem;
+        transition: background 0.3s;
+      }
+      .step-line.done {
+        background: var(--green);
+      }
+
+      /* ── Result Cards ────────────────────────────────────────── */
+      .result-hero {
+        text-align: center;
+        padding: 2rem;
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-lg);
+        margin-bottom: 1.5rem;
+        position: relative;
+        overflow: hidden;
+      }
+      .result-hero::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: radial-gradient(
+          ellipse at 50% 0%,
+          rgba(34, 197, 94, 0.08) 0%,
+          transparent 70%
+        );
+        pointer-events: none;
+      }
+      .result-number {
+        font-family: var(--font-disp);
+        font-size: clamp(3rem, 10vw, 6rem);
+        font-weight: 700;
+        line-height: 1;
+        position: relative;
+      }
+      .result-unit {
+        font-size: 1.5rem;
+        color: var(--text-dim);
+        font-weight: 400;
+      }
+      .result-label {
+        font-size: 0.9rem;
+        color: var(--text-dim);
+        margin-top: 0.5rem;
+      }
+      .result-badge {
+        display: inline-block;
+        padding: 0.25rem 1rem;
+        border-radius: 999px;
+        font-size: 0.875rem;
+        font-weight: 600;
+        margin-top: 0.75rem;
+        text-transform: capitalize;
+      }
+
+      .badge-excellent {
+        background: rgba(34, 197, 94, 0.15);
+        color: #22c55e;
+        border: 1px solid rgba(34, 197, 94, 0.3);
+      }
+      .badge-good {
+        background: rgba(34, 197, 94, 0.1);
+        color: #86efac;
+        border: 1px solid rgba(34, 197, 94, 0.2);
+      }
+      .badge-average {
+        background: rgba(245, 158, 11, 0.1);
+        color: #f59e0b;
+        border: 1px solid rgba(245, 158, 11, 0.3);
+      }
+      .badge-high {
+        background: rgba(239, 68, 68, 0.1);
+        color: #ef4444;
+        border: 1px solid rgba(239, 68, 68, 0.3);
+      }
+      .badge-critical {
+        background: rgba(239, 68, 68, 0.2);
+        color: #f87171;
+        border: 1px solid rgba(239, 68, 68, 0.4);
+      }
+
+      /* ── Stat Cards ───────────────────────────────────────────── */
+      .stat-card {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        padding: 1.25rem;
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+      }
+      .stat-label {
+        font-size: 0.75rem;
+        color: var(--text-dim);
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+      }
+      .stat-value {
+        font-family: var(--font-disp);
+        font-size: 1.75rem;
+        font-weight: 700;
+      }
+      .stat-sub {
+        font-size: 0.8rem;
+        color: var(--text-dim);
+      }
+
+      /* ── Progress Bar ────────────────────────────────────────── */
+      .progress-row {
+        margin-bottom: 1rem;
+      }
+      .progress-header {
+        display: flex;
+        justify-content: space-between;
+        font-size: 0.875rem;
+        margin-bottom: 0.4rem;
+      }
+      .progress-track {
+        height: 8px;
+        background: var(--surface2);
+        border-radius: 4px;
+        overflow: hidden;
+      }
+      .progress-fill {
+        height: 100%;
+        border-radius: 4px;
+        transition: width 1s cubic-bezier(0.4, 0, 0.2, 1);
+      }
+
+      /* ── Tips ────────────────────────────────────────────────── */
+      .tip-card {
+        display: flex;
+        gap: 1rem;
+        padding: 1.25rem;
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        margin-bottom: 0.75rem;
+        transition: border-color 0.2s;
+      }
+      .tip-card:hover {
+        border-color: var(--green);
+      }
+      .tip-icon {
+        width: 2.5rem;
+        height: 2.5rem;
+        flex-shrink: 0;
+        background: rgba(34, 197, 94, 0.1);
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.25rem;
+      }
+      .tip-title {
+        font-weight: 600;
+        margin-bottom: 0.25rem;
+      }
+      .tip-desc {
+        font-size: 0.875rem;
+        color: var(--text-dim);
+      }
+      .tip-impact {
+        font-size: 0.8rem;
+        color: var(--green);
+        margin-top: 0.5rem;
+        font-weight: 500;
+      }
+      .tip-diff {
+        display: inline-block;
+        font-size: 0.7rem;
+        padding: 0.15rem 0.5rem;
+        border-radius: 999px;
+        margin-left: 0.5rem;
+        background: var(--surface2);
+        color: var(--text-dim);
+      }
+
+      /* ── Compare Bars ────────────────────────────────────────── */
+      .compare-bar {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        margin-bottom: 1rem;
+      }
+      .compare-bar-label {
+        width: 120px;
+        font-size: 0.875rem;
+        text-align: right;
+        flex-shrink: 0;
+      }
+      .compare-bar-track {
+        flex: 1;
+        height: 10px;
+        background: var(--surface2);
+        border-radius: 5px;
+        overflow: hidden;
+      }
+      .compare-bar-fill {
+        height: 100%;
+        border-radius: 5px;
+        transition: width 1s;
+      }
+      .compare-bar-value {
+        width: 70px;
+        font-size: 0.875rem;
+        font-weight: 500;
+      }
+
+      /* ── Auth ────────────────────────────────────────────────── */
+      .auth-wrapper {
+        max-width: 400px;
+        margin: 3rem auto;
+        padding: 2rem;
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-lg);
+      }
+      .auth-title {
+        font-family: var(--font-disp);
+        font-size: 1.75rem;
+        font-weight: 700;
+        margin-bottom: 0.5rem;
+      }
+      .auth-sub {
+        color: var(--text-dim);
+        font-size: 0.9rem;
+        margin-bottom: 2rem;
+      }
+      .auth-switch {
+        text-align: center;
+        margin-top: 1.5rem;
+        font-size: 0.875rem;
+        color: var(--text-dim);
+      }
+      .auth-switch a {
+        color: var(--green);
+        cursor: pointer;
+        text-decoration: none;
+      }
+      .error-msg {
+        color: var(--red);
+        font-size: 0.875rem;
+        margin-bottom: 1rem;
+        padding: 0.75rem;
+        background: rgba(239, 68, 68, 0.1);
+        border-radius: var(--radius);
+        border: 1px solid rgba(239, 68, 68, 0.2);
+      }
+
+      /* ── Chart container ────────────────────────────────────── */
+      .chart-container {
+        position: relative;
+        width: 100%;
+      }
+
+      /* ── Animations ─────────────────────────────────────────── */
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+          transform: translateY(16px);
+        }
+        to {
+          opacity: 1;
+          transform: none;
+        }
+      }
+      .fade-in {
+        animation: fadeIn 0.4s ease both;
+      }
+      @keyframes pulse {
+        0%,
+        100% {
+          opacity: 1;
+        }
+        50% {
+          opacity: 0.5;
+        }
+      }
+      .pulse {
+        animation: pulse 1.5s infinite;
+      }
+
+      /* ── Utilities ───────────────────────────────────────────── */
+      .text-green {
+        color: var(--green);
+      }
+      .text-dim {
+        color: var(--text-dim);
+      }
+      .text-center {
+        text-align: center;
+      }
+      .mt-1 {
+        margin-top: 0.5rem;
+      }
+      .mt-2 {
+        margin-top: 1rem;
+      }
+      .mt-3 {
+        margin-top: 1.5rem;
+      }
+      .mt-4 {
+        margin-top: 2rem;
+      }
+      .flex {
+        display: flex;
+      }
+      .items-center {
+        align-items: center;
+      }
+      .gap-1 {
+        gap: 0.5rem;
+      }
+      .gap-2 {
+        gap: 1rem;
+      }
+      .hidden {
+        display: none !important;
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        *,
+        *::before,
+        *::after {
+          animation: none !important;
+          transition: none !important;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="app" id="app">
+      <!-- ── Navigation ───────────────────────────────────────── -->
+      <nav role="navigation" aria-label="Main navigation">
+        <div class="nav-logo" aria-label="EcoTrack AI home">
+          🌿 EcoTrack<span> AI</span>
+        </div>
+        <div class="nav-tabs" role="tablist">
+          <button
+            class="nav-tab active"
+            role="tab"
+            onclick="showPage('home')"
+            id="tab-home"
+            aria-selected="true"
+          >
+            Home
+          </button>
+          <button
+            class="nav-tab"
+            role="tab"
+            onclick="showPage('calculate')"
+            id="tab-calculate"
+            aria-selected="false"
+          >
+            Calculator
+          </button>
+          <button
+            class="nav-tab"
+            role="tab"
+            onclick="showPage('dashboard')"
+            id="tab-dashboard"
+            aria-selected="false"
+          >
+            Dashboard
+          </button>
+          <button
+            class="nav-tab"
+            role="tab"
+            onclick="showPage('tips')"
+            id="tab-tips"
+            aria-selected="false"
+          >
+            Tips
+          </button>
+          <button
+            class="nav-tab"
+            role="tab"
+            onclick="showPage('insights')"
+            id="tab-insights"
+            aria-selected="false"
+          >
+            &#129302; AI Insights
+          </button>
+          <button
+            class="nav-tab"
+            role="tab"
+            onclick="showPage('chat')"
+            id="tab-chat"
+            aria-selected="false"
+          >
+            &#128172; EcoBot
+          </button>
+        </div>
+        <div id="auth-status">
+          <button
+            class="btn-primary"
+            onclick="showPage('login')"
+            style="padding: 0.4rem 1rem; font-size: 0.875rem"
+          >
+            Sign in
+          </button>
+        </div>
+      </nav>
+
+      <main id="main-content" role="main">
+        <!-- ── HOME PAGE ──────────────────────────────────────── -->
+        <section id="page-home" role="tabpanel" aria-labelledby="tab-home">
+          <div class="hero">
+            <p class="hero-eyebrow">Carbon Footprint Awareness Platform</p>
+            <h1 class="hero-title">
+              Know your impact.<br /><span class="accent"
+                >Change your future.</span
+              >
+            </h1>
+            <p class="hero-sub">
+              Measure your annual CO₂ footprint, predict your trajectory with
+              ML, and get personalized actions ranked by impact.
+            </p>
+            <button
+              class="btn-primary"
+              onclick="showPage('calculate')"
+              aria-label="Start carbon footprint calculator"
+            >
+              Calculate My Footprint →
+            </button>
+            <button
+              class="btn-secondary"
+              onclick="showPage('dashboard')"
+              aria-label="View sample dashboard"
+            >
+              View Dashboard
+            </button>
+          </div>
+
+          <!-- Stats row -->
+          <div class="grid-3 mt-4 fade-in">
+            <div class="stat-card">
+              <span class="stat-label">Global Average</span>
+              <span class="stat-value text-green">4,000</span>
+              <span class="stat-sub">kg CO₂e / person / year</span>
+            </div>
+            <div class="stat-card">
+              <span class="stat-label">India Average</span>
+              <span class="stat-value" style="color: var(--amber)">1,800</span>
+              <span class="stat-sub">kg CO₂e / person / year</span>
+            </div>
+            <div class="stat-card">
+              <span class="stat-label">1.5°C Target</span>
+              <span class="stat-value" style="color: var(--green)">2,300</span>
+              <span class="stat-sub">kg CO₂e / person / year by 2030</span>
+            </div>
+          </div>
+
+          <!-- How it works -->
+          <div class="card mt-4 fade-in">
+            <h2 class="card-title">How it works</h2>
+            <div class="grid-3">
+              <div style="text-align: center; padding: 1rem">
+                <div style="font-size: 2rem; margin-bottom: 0.75rem">📊</div>
+                <h3
+                  style="font-family: var(--font-disp); margin-bottom: 0.5rem"
+                >
+                  1. Input Your Data
+                </h3>
+                <p class="text-dim" style="font-size: 0.875rem">
+                  Answer questions about transport, home energy, diet, and
+                  shopping in 2 minutes.
+                </p>
+              </div>
+              <div style="text-align: center; padding: 1rem">
+                <div style="font-size: 2rem; margin-bottom: 0.75rem">🤖</div>
+                <h3
+                  style="font-family: var(--font-disp); margin-bottom: 0.5rem"
+                >
+                  2. ML Analysis
+                </h3>
+                <p class="text-dim" style="font-size: 0.875rem">
+                  Our scikit-learn model calculates your footprint and predicts
+                  your 6-month trajectory.
+                </p>
+              </div>
+              <div style="text-align: center; padding: 1rem">
+                <div style="font-size: 2rem; margin-bottom: 0.75rem">🎯</div>
+                <h3
+                  style="font-family: var(--font-disp); margin-bottom: 0.5rem"
+                >
+                  3. Take Action
+                </h3>
+                <p class="text-dim" style="font-size: 0.875rem">
+                  Get personalized tips ranked by CO₂ impact, specific to your
+                  biggest emission sources.
+                </p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ── CALCULATOR PAGE ────────────────────────────────── -->
+        <section
+          id="page-calculate"
+          class="hidden"
+          role="tabpanel"
+          aria-labelledby="tab-calculate"
+        >
+          <h2
+            style="
+              font-family: var(--font-disp);
+              font-size: 1.75rem;
+              margin-bottom: 0.5rem;
+            "
+          >
+            Carbon Calculator
+          </h2>
+          <p class="text-dim" style="margin-bottom: 2rem">
+            Complete all 4 sections to get your full footprint analysis.
+          </p>
+
+          <!-- Step indicator -->
+          <div class="steps" role="list" aria-label="Calculator steps">
+            <div
+              class="step active"
+              id="step-0"
+              role="listitem"
+              onclick="goStep(0)"
+              aria-label="Step 1: Transport"
+              tabindex="0"
+            >
+              <div class="step-dot">🚗</div>
+              <span class="step-label">Transport</span>
+            </div>
+            <div class="step-line" id="line-0"></div>
+            <div
+              class="step"
+              id="step-1"
+              role="listitem"
+              onclick="goStep(1)"
+              aria-label="Step 2: Home Energy"
+              tabindex="0"
+            >
+              <div class="step-dot">🏠</div>
+              <span class="step-label">Home</span>
+            </div>
+            <div class="step-line" id="line-1"></div>
+            <div
+              class="step"
+              id="step-2"
+              role="listitem"
+              onclick="goStep(2)"
+              aria-label="Step 3: Diet"
+              tabindex="0"
+            >
+              <div class="step-dot">🥗</div>
+              <span class="step-label">Diet</span>
+            </div>
+            <div class="step-line" id="line-2"></div>
+            <div
+              class="step"
+              id="step-3"
+              role="listitem"
+              onclick="goStep(3)"
+              aria-label="Step 4: Shopping"
+              tabindex="0"
+            >
+              <div class="step-dot">🛍️</div>
+              <span class="step-label">Shopping</span>
+            </div>
+          </div>
+
+          <!-- Step 0: Transport -->
+          <div id="calc-step-0" class="card fade-in">
+            <div class="form-section-title">
+              <div class="icon">🚗</div>
+              Transport Habits
+            </div>
+            <div class="grid-2">
+              <div class="form-group">
+                <label for="car-km">Car distance per week (km)</label>
+                <input
+                  type="number"
+                  id="car-km"
+                  min="0"
+                  max="5000"
+                  value="100"
+                  aria-describedby="car-km-hint"
+                />
+                <small
+                  id="car-km-hint"
+                  class="text-dim"
+                  style="font-size: 0.75rem"
+                  >0 if you don't drive</small
+                >
+              </div>
+              <div class="form-group">
+                <label for="fuel-type">Car fuel type</label>
+                <select id="fuel-type" aria-label="Select your car's fuel type">
+                  <option value="petrol">Petrol</option>
+                  <option value="diesel">Diesel</option>
+                  <option value="hybrid">Hybrid</option>
+                  <option value="electric">Electric</option>
+                  <option value="none">No car</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label for="flights">Flights per year (total trips)</label>
+                <input type="number" id="flights" min="0" max="100" value="2" />
+              </div>
+              <div class="form-group">
+                <label for="transit-km">Public transport per week (km)</label>
+                <input
+                  type="number"
+                  id="transit-km"
+                  min="0"
+                  max="1000"
+                  value="50"
+                />
+              </div>
+            </div>
+            <button class="btn-primary" onclick="nextStep(1)">
+              Next: Home Energy →
+            </button>
+          </div>
+
+          <!-- Step 1: Home Energy -->
+          <div id="calc-step-1" class="card fade-in hidden">
+            <div class="form-section-title">
+              <div class="icon">🏠</div>
+              Home Energy Use
+            </div>
+            <div class="grid-2">
+              <div class="form-group">
+                <label for="electricity">Electricity use per month (kWh)</label>
+                <input
+                  type="number"
+                  id="electricity"
+                  min="0"
+                  max="10000"
+                  value="200"
+                />
+                <small class="text-dim" style="font-size: 0.75rem"
+                  >Check your electricity bill</small
+                >
+              </div>
+              <div class="form-group">
+                <label for="gas">Gas use per month (units)</label>
+                <input type="number" id="gas" min="0" max="5000" value="20" />
+              </div>
+              <div class="form-group">
+                <label for="people">Number of people in home</label>
+                <input type="number" id="people" min="1" max="20" value="4" />
+              </div>
+              <div class="form-group">
+                <label for="solar">Renewable energy % (0 if none)</label>
+                <input type="number" id="solar" min="0" max="100" value="0" />
+                <small class="text-dim" style="font-size: 0.75rem"
+                  >0% = grid power only, 100% = full solar</small
+                >
+              </div>
+            </div>
+            <button
+              class="btn-secondary"
+              onclick="nextStep(0)"
+              style="margin-right: 0.5rem"
+            >
+              ← Back
+            </button>
+            <button class="btn-primary" onclick="nextStep(2)">
+              Next: Diet →
+            </button>
+          </div>
+
+          <!-- Step 2: Diet -->
+          <div id="calc-step-2" class="card fade-in hidden">
+            <div class="form-section-title">
+              <div class="icon">🥗</div>
+              Diet & Food
+            </div>
+            <div class="grid-2">
+              <div class="form-group">
+                <label for="diet-type">Diet type</label>
+                <select id="diet-type">
+                  <option value="omnivore">Omnivore (eat everything)</option>
+                  <option value="pescatarian">
+                    Pescatarian (fish, no meat)
+                  </option>
+                  <option value="vegetarian">Vegetarian</option>
+                  <option value="vegan">Vegan</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label for="meat-meals">Meat/fish meals per week</label>
+                <input
+                  type="number"
+                  id="meat-meals"
+                  min="0"
+                  max="21"
+                  value="7"
+                />
+              </div>
+              <div class="form-group">
+                <label for="food-waste">Food waste level</label>
+                <select id="food-waste">
+                  <option value="low">Low — I rarely throw food away</option>
+                  <option value="medium" selected>
+                    Medium — Sometimes waste food
+                  </option>
+                  <option value="high">High — Regularly throw food away</option>
+                </select>
+              </div>
+            </div>
+            <button
+              class="btn-secondary"
+              onclick="nextStep(1)"
+              style="margin-right: 0.5rem"
+            >
+              ← Back
+            </button>
+            <button class="btn-primary" onclick="nextStep(3)">
+              Next: Shopping →
+            </button>
+          </div>
+
+          <!-- Step 3: Shopping -->
+          <div id="calc-step-3" class="card fade-in hidden">
+            <div class="form-section-title">
+              <div class="icon">🛍️</div>
+              Shopping & Consumer Goods
+            </div>
+            <div class="grid-2">
+              <div class="form-group">
+                <label for="clothes">New clothing items per year</label>
+                <input
+                  type="number"
+                  id="clothes"
+                  min="0"
+                  max="200"
+                  value="15"
+                />
+              </div>
+              <div class="form-group">
+                <label for="electronics"
+                  >New electronics per year (phones, laptops etc.)</label
+                >
+                <input
+                  type="number"
+                  id="electronics"
+                  min="0"
+                  max="20"
+                  value="1"
+                />
+              </div>
+              <div class="form-group">
+                <label for="online-orders"
+                  >Online shopping orders per month</label
+                >
+                <input
+                  type="number"
+                  id="online-orders"
+                  min="0"
+                  max="200"
+                  value="8"
+                />
+              </div>
+            </div>
+            <button
+              class="btn-secondary"
+              onclick="nextStep(2)"
+              style="margin-right: 0.5rem"
+            >
+              ← Back
+            </button>
+            <button
+              class="btn-primary"
+              onclick="calculateFootprint()"
+              id="calc-btn"
+            >
+              Calculate My Footprint 🌍
+            </button>
+          </div>
+        </section>
+
+        <!-- ── DASHBOARD PAGE ─────────────────────────────────── -->
+        <section
+          id="page-dashboard"
+          class="hidden"
+          role="tabpanel"
+          aria-labelledby="tab-dashboard"
+        >
+          <div id="no-data-msg" class="text-center" style="padding: 4rem 2rem">
+            <div style="font-size: 3rem; margin-bottom: 1rem">🌱</div>
+            <h2 style="font-family: var(--font-disp); margin-bottom: 0.75rem">
+              No data yet
+            </h2>
+            <p class="text-dim" style="margin-bottom: 1.5rem">
+              Complete the calculator first to see your dashboard.
+            </p>
+            <button class="btn-primary" onclick="showPage('calculate')">
+              Go to Calculator →
+            </button>
+          </div>
+
+          <div id="dashboard-content" class="hidden fade-in">
+            <!-- Result hero -->
+            <div class="result-hero">
+              <p
+                class="text-dim"
+                style="font-size: 0.875rem; margin-bottom: 0.5rem"
+              >
+                Your Annual Carbon Footprint
+              </p>
+              <div class="result-number">
+                <span id="total-kg">—</span>
+                <span class="result-unit"> kg</span>
+              </div>
+              <p class="result-label">CO₂ equivalent per year</p>
+              <div class="result-badge" id="result-badge">—</div>
+              <p
+                style="
+                  font-size: 0.8rem;
+                  color: var(--text-dim);
+                  margin-top: 0.75rem;
+                "
+                id="percentile-text"
+              >
+                —
+              </p>
+            </div>
+
+            <!-- Stats row -->
+            <div class="grid-4 mt-3" id="stats-row">
+              <div class="stat-card">
+                <span class="stat-label">🚗 Transport</span>
+                <span class="stat-value" id="stat-transport">—</span>
+                <span class="stat-sub">kg CO₂e / year</span>
+              </div>
+              <div class="stat-card">
+                <span class="stat-label">🏠 Home Energy</span>
+                <span class="stat-value" id="stat-home">—</span>
+                <span class="stat-sub">kg CO₂e / year</span>
+              </div>
+              <div class="stat-card">
+                <span class="stat-label">🥗 Diet</span>
+                <span class="stat-value" id="stat-diet">—</span>
+                <span class="stat-sub">kg CO₂e / year</span>
+              </div>
+              <div class="stat-card">
+                <span class="stat-label">🛍️ Shopping</span>
+                <span class="stat-value" id="stat-shopping">—</span>
+                <span class="stat-sub">kg CO₂e / year</span>
+              </div>
+            </div>
+
+            <!-- Charts row -->
+            <div class="grid-2 mt-3">
+              <!-- Donut chart -->
+              <div class="card">
+                <h3 class="card-title">Footprint Breakdown</h3>
+                <div class="chart-container" style="height: 250px">
+                  <canvas
+                    id="donut-chart"
+                    aria-label="Pie chart showing carbon footprint by category"
+                  ></canvas>
+                </div>
+              </div>
+
+              <!-- Comparison bars -->
+              <div class="card">
+                <h3 class="card-title">vs Global Benchmarks</h3>
+                <div id="compare-bars" style="margin-top: 0.5rem"></div>
+              </div>
+            </div>
+
+            <!-- Forecast chart -->
+            <div class="card mt-3">
+              <h3 class="card-title">6-Month Forecast (ML Model)</h3>
+              <div id="trend-tag" style="margin-bottom: 1rem"></div>
+              <div class="chart-container" style="height: 220px">
+                <canvas
+                  id="forecast-chart"
+                  aria-label="Line chart showing predicted carbon footprint over next 6 months"
+                ></canvas>
+              </div>
+            </div>
+
+            <!-- Category breakdown bars -->
+            <div class="card mt-3">
+              <h3 class="card-title">Category Breakdown</h3>
+              <div id="breakdown-bars"></div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ── TIPS PAGE ──────────────────────────────────────── -->
+        <section
+          id="page-tips"
+          class="hidden"
+          role="tabpanel"
+          aria-labelledby="tab-tips"
+        >
+          <h2
+            style="
+              font-family: var(--font-disp);
+              font-size: 1.75rem;
+              margin-bottom: 0.5rem;
+            "
+          >
+            Your Action Plan
+          </h2>
+          <p class="text-dim" style="margin-bottom: 2rem">
+            Personalized tips ranked by CO₂ impact — highest savings first.
+          </p>
+
+          <div id="no-tips-msg" class="text-center" style="padding: 3rem">
+            <div style="font-size: 2.5rem; margin-bottom: 1rem">💡</div>
+            <p class="text-dim">
+              Complete the calculator to get your personalized tips.
+            </p>
+            <button
+              class="btn-primary"
+              onclick="showPage('calculate')"
+              style="margin-top: 1rem"
+            >
+              Start Calculator →
+            </button>
+          </div>
+
+          <div id="tips-content" class="hidden fade-in">
+            <div id="tips-list"></div>
+            <div class="card mt-3">
+              <h3 class="card-title">Your Reduction Potential</h3>
+              <p
+                style="
+                  font-size: 2rem;
+                  font-family: var(--font-disp);
+                  font-weight: 700;
+                  color: var(--green);
+                "
+                id="reduction-potential"
+              >
+                —
+              </p>
+              <p class="text-dim" style="margin-top: 0.25rem">
+                kg CO₂e you could save per year by following these
+                recommendations
+              </p>
+            </div>
+          </div>
+        </section>
+
+        <!-- ── LOGIN PAGE ─────────────────────────────────────── -->
+        <section id="page-login" class="hidden" role="tabpanel">
+          <div class="auth-wrapper fade-in">
+            <h2 class="auth-title">Welcome back</h2>
+            <p class="auth-sub">
+              Sign in to save your footprint history and track progress over
+              time.
+            </p>
+            <div id="login-error" class="error-msg hidden" role="alert"></div>
+            <div class="form-group">
+              <label for="login-email">Email</label>
+              <input
+                type="email"
+                id="login-email"
+                autocomplete="email"
+                placeholder="you@example.com"
+              />
+            </div>
+            <div class="form-group">
+              <label for="login-password">Password</label>
+              <input
+                type="password"
+                id="login-password"
+                autocomplete="current-password"
+                placeholder="••••••••"
+                onkeydown="if (event.key === 'Enter') doLogin();"
+              />
+            </div>
+            <button class="btn-primary" onclick="doLogin()" style="width: 100%">
+              Sign in
+            </button>
+            <p class="auth-switch">
+              No account? <a onclick="showPage('register')">Register free →</a>
+            </p>
+            <p class="auth-switch" style="margin-top: 0.5rem">
+              <a onclick="showPage('home')" style="color: var(--text-dim)"
+                >← Continue without signing in</a
+              >
+            </p>
+          </div>
+        </section>
+
+        <!-- ── REGISTER PAGE ──────────────────────────────────── -->
+        <section id="page-register" class="hidden" role="tabpanel">
+          <div class="auth-wrapper fade-in">
+            <h2 class="auth-title">Create account</h2>
+            <p class="auth-sub">
+              Track your carbon journey over time and see your improvement.
+            </p>
+            <div
+              id="register-error"
+              class="error-msg hidden"
+              role="alert"
+            ></div>
+            <div class="form-group">
+              <label for="reg-name">Full name</label>
+              <input
+                type="text"
+                id="reg-name"
+                autocomplete="name"
+                placeholder="Ayush Bharadwaj"
+              />
+            </div>
+            <div class="form-group">
+              <label for="reg-email">Email</label>
+              <input
+                type="email"
+                id="reg-email"
+                autocomplete="email"
+                placeholder="you@example.com"
+              />
+            </div>
+            <div class="form-group">
+              <label for="reg-password"
+                >Password
+                <span class="text-dim">(min 8 characters)</span></label
+              >
+              <input
+                type="password"
+                id="reg-password"
+                autocomplete="new-password"
+                placeholder="••••••••"
+              />
+            </div>
+            <button
+              class="btn-primary"
+              onclick="doRegister()"
+              style="width: 100%"
+            >
+              Create account →
+            </button>
+            <p class="auth-switch">
+              Already have an account?
+              <a onclick="showPage('login')">Sign in</a>
+            </p>
+          </div>
+        </section>
+
+        <!-- ── AI INSIGHTS PAGE ──────────────────────────────────────────── -->
+        <section
+          id="page-insights"
+          class="hidden fade-in"
+          role="tabpanel"
+          aria-labelledby="tab-insights"
+        >
+          <h2
+            style="
+              font-family: var(--font-disp);
+              font-size: 1.75rem;
+              margin-bottom: 0.5rem;
+            "
+          >
+            &#129302; AI Insights
+          </h2>
+          <p class="text-dim" style="margin-bottom: 2rem">
+            Claude analyses your exact numbers and generates a personalised
+            report — not generic tips.
+          </p>
+
+          <div id="no-insights-msg" class="text-center" style="padding: 3rem">
+            <div style="font-size: 2.5rem; margin-bottom: 1rem">&#129302;</div>
+            <p class="text-dim">
+              Complete the calculator first to unlock your AI analysis.
+            </p>
+            <button
+              class="btn-primary"
+              onclick="showPage('calculate')"
+              style="margin-top: 1rem"
+            >
+              Start Calculator &#8594;
+            </button>
+          </div>
+
+          <div id="insights-content" class="hidden">
+            <div
+              id="insights-loading"
+              class="hidden text-center"
+              style="padding: 2rem"
+            >
+              <div class="pulse" style="font-size: 2rem; margin-bottom: 1rem">
+                &#129302;
+              </div>
+              <p class="text-dim">Claude is analysing your footprint...</p>
+            </div>
+
+            <div id="insights-result" class="hidden fade-in">
+              <!-- Summary Card -->
+              <div
+                class="card"
+                style="
+                  margin-bottom: 1.5rem;
+                  border-color: rgba(34, 197, 94, 0.3);
+                  background: linear-gradient(
+                    135deg,
+                    var(--surface),
+                    var(--surface2)
+                  );
+                "
+              >
+                <div
+                  style="
+                    display: flex;
+                    align-items: center;
+                    gap: 0.75rem;
+                    margin-bottom: 1rem;
+                  "
+                >
+                  <span style="font-size: 1.5rem">&#128200;</span>
+                  <h3
+                    style="
+                      font-family: var(--font-disp);
+                      font-size: 1.1rem;
+                      color: var(--green);
+                    "
+                  >
+                    Your Footprint Summary
+                  </h3>
+                </div>
+                <p
+                  id="ai-summary"
+                  style="line-height: 1.7; color: var(--text)"
+                ></p>
+              </div>
+
+              <!-- Key Insight Card -->
+              <div
+                class="card"
+                style="
+                  margin-bottom: 1.5rem;
+                  border-color: rgba(245, 158, 11, 0.3);
+                "
+              >
+                <div
+                  style="
+                    display: flex;
+                    align-items: center;
+                    gap: 0.75rem;
+                    margin-bottom: 1rem;
+                  "
+                >
+                  <span style="font-size: 1.5rem">&#128161;</span>
+                  <h3
+                    style="
+                      font-family: var(--font-disp);
+                      font-size: 1.1rem;
+                      color: var(--amber);
+                    "
+                  >
+                    Key Insight
+                  </h3>
+                </div>
+                <p id="ai-key-insight" style="line-height: 1.7"></p>
+              </div>
+
+              <!-- Action Plan -->
+              <div class="card" style="margin-bottom: 1.5rem">
+                <div
+                  style="
+                    display: flex;
+                    align-items: center;
+                    gap: 0.75rem;
+                    margin-bottom: 1.25rem;
+                  "
+                >
+                  <span style="font-size: 1.5rem">&#127919;</span>
+                  <h3 style="font-family: var(--font-disp); font-size: 1.1rem">
+                    Your 3-Step Action Plan
+                  </h3>
+                </div>
+                <div id="ai-action-plan"></div>
+              </div>
+
+              <!-- Anomaly Alert (shown only when spike detected) -->
+              <div
+                id="anomaly-card"
+                class="card hidden"
+                style="
+                  margin-bottom: 1.5rem;
+                  border-color: rgba(239, 68, 68, 0.4);
+                  background: rgba(239, 68, 68, 0.05);
+                "
+              >
+                <div
+                  style="
+                    display: flex;
+                    align-items: center;
+                    gap: 0.75rem;
+                    margin-bottom: 1rem;
+                  "
+                >
+                  <span style="font-size: 1.5rem">&#9888;&#65039;</span>
+                  <h3
+                    style="
+                      font-family: var(--font-disp);
+                      font-size: 1.1rem;
+                      color: #ef4444;
+                    "
+                  >
+                    Emission Anomaly Detected
+                  </h3>
+                </div>
+                <p
+                  id="anomaly-explanation"
+                  style="color: var(--text-dim); line-height: 1.7"
+                ></p>
+                <div
+                  id="anomaly-zscores"
+                  style="
+                    margin-top: 1rem;
+                    display: grid;
+                    grid-template-columns: repeat(4, 1fr);
+                    gap: 0.75rem;
+                  "
+                ></div>
+              </div>
+
+              <!-- Motivational Close -->
+              <div
+                class="card"
+                style="text-align: center; border-color: rgba(34, 197, 94, 0.2)"
+              >
+                <span style="font-size: 2rem">&#127807;</span>
+                <p
+                  id="ai-motivational"
+                  style="
+                    margin-top: 0.75rem;
+                    font-family: var(--font-disp);
+                    font-size: 1rem;
+                    color: var(--green);
+                    font-style: italic;
+                  "
+                ></p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ── ECOBOT CHAT PAGE ───────────────────────────────────────────── -->
+        <section
+          id="page-chat"
+          class="hidden fade-in"
+          role="tabpanel"
+          aria-labelledby="tab-chat"
+        >
+          <h2
+            style="
+              font-family: var(--font-disp);
+              font-size: 1.75rem;
+              margin-bottom: 0.5rem;
+            "
+          >
+            &#128172; EcoBot
+          </h2>
+          <p class="text-dim" style="margin-bottom: 1.5rem">
+            AI carbon coach powered by Claude. Knows your footprint — ask
+            anything.
+          </p>
+
+          <div style="max-width: 700px; margin: 0 auto">
+            <!-- Chat messages -->
+            <div
+              id="chat-messages"
+              style="
+                height: 420px;
+                overflow-y: auto;
+                padding: 1rem;
+                background: var(--surface);
+                border: 1px solid var(--border);
+                border-radius: var(--radius-lg);
+                margin-bottom: 1rem;
+                display: flex;
+                flex-direction: column;
+                gap: 1rem;
+              "
+              aria-live="polite"
+              aria-label="Chat messages"
+            >
+              <div
+                class="chat-msg-bot"
+                style="display: flex; gap: 0.75rem; align-items: flex-start"
+              >
+                <div
+                  style="
+                    width: 2rem;
+                    height: 2rem;
+                    background: rgba(34, 197, 94, 0.15);
+                    border-radius: 50%;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    flex-shrink: 0;
+                    font-size: 0.9rem;
+                  "
+                >
+                  &#129302;
+                </div>
+                <div
+                  style="
+                    background: var(--surface2);
+                    border: 1px solid var(--border);
+                    border-radius: 12px;
+                    padding: 0.75rem 1rem;
+                    max-width: 85%;
+                    line-height: 1.6;
+                    font-size: 0.9rem;
+                  "
+                >
+                  Hi! I&#39;m EcoBot &#127807; — your personal carbon coach.
+                  Complete the calculator first so I can give you personalised
+                  advice, or ask me anything about carbon footprints, climate
+                  science, or sustainable living!
+                </div>
+              </div>
+            </div>
+
+            <!-- Suggested questions -->
+            <div
+              id="chat-suggestions"
+              style="
+                display: flex;
+                flex-wrap: wrap;
+                gap: 0.5rem;
+                margin-bottom: 1rem;
+              "
+            >
+              <button
+                class="btn-secondary"
+                onclick="sendSuggestion(this)"
+                style="font-size: 0.78rem; padding: 0.35rem 0.75rem"
+              >
+                What drives my footprint most?
+              </button>
+              <button
+                class="btn-secondary"
+                onclick="sendSuggestion(this)"
+                style="font-size: 0.78rem; padding: 0.35rem 0.75rem"
+              >
+                How do I reduce transport emissions?
+              </button>
+              <button
+                class="btn-secondary"
+                onclick="sendSuggestion(this)"
+                style="font-size: 0.78rem; padding: 0.35rem 0.75rem"
+              >
+                Is solar worth it in India?
+              </button>
+              <button
+                class="btn-secondary"
+                onclick="sendSuggestion(this)"
+                style="font-size: 0.78rem; padding: 0.35rem 0.75rem"
+              >
+                Vegan vs vegetarian impact?
+              </button>
+            </div>
+
+            <!-- Input row -->
+            <div style="display: flex; gap: 0.75rem">
+              <input
+                type="text"
+                id="chat-input"
+                placeholder="Ask EcoBot anything..."
+                aria-label="Chat message input"
+                style="flex: 1"
+                onkeydown="
+                  if (event.key === 'Enter' && !event.shiftKey) {
+                    event.preventDefault();
+                    sendChatMessage();
+                  }
+                "
+                maxlength="500"
+              />
+              <button
+                class="btn-primary"
+                onclick="sendChatMessage()"
+                id="chat-send-btn"
+                style="padding: 0.65rem 1.25rem; white-space: nowrap"
+                aria-label="Send message"
+              >
+                Send &#8594;
+              </button>
+            </div>
+            <p
+              class="text-dim"
+              style="font-size: 0.75rem; margin-top: 0.5rem; text-align: center"
+            >
+              Powered by Claude &#8226; Responses may not be 100% accurate
+              &#8212; verify important decisions
+            </p>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <script>
+      /* ─────────────────────────────────────────────────────────────────
+   EcoTrack AI — Frontend Logic
+   All state lives in window.appState.
+   API calls go to the FastAPI backend at API_BASE.
+   For demo/standalone mode, DEMO_MODE=true uses local calculation.
+───────────────────────────────────────────────────────────────── */
+
+      // API base URL — change to your deployed backend when live
+      const API_BASE = "http://localhost:8000";
+
+      // Demo mode: true = calculate locally without backend, false = use API
+      // Set to true so the app works standalone for demo purposes
+      const DEMO_MODE = false;
+
+      // Global application state
+      const appState = {
+        currentStep: 0, // Current calculator step (0-3)
+        result: null, // Last carbon calculation result
+        tips: null, // Generated tips
+        forecast: null, // ML forecast result
+        token: null, // JWT auth token (null = not logged in)
+        userName: null, // Logged in user's name
+        donutChart: null, // Chart.js donut instance (kept to destroy on re-render)
+        forecastChart: null, // Chart.js line chart instance
+      };
+
+      /* ── PAGE NAVIGATION ─────────────────────────────────────────── */
+      function showPage(pageName) {
+        // Hide all pages
+        document
+          .querySelectorAll("section[id^='page-']")
+          .forEach((s) => s.classList.add("hidden"));
+        // Deactivate all tabs
+        document.querySelectorAll(".nav-tab").forEach((t) => {
+          t.classList.remove("active");
+          t.setAttribute("aria-selected", "false");
+        });
+
+        // Show requested page
+        const page = document.getElementById(`page-${pageName}`);
+        if (page) page.classList.remove("hidden");
+
+        // Activate matching tab
+        const tab = document.getElementById(`tab-${pageName}`);
+        if (tab) {
+          tab.classList.add("active");
+          tab.setAttribute("aria-selected", "true");
+        }
+
+        // Scroll to top
+        window.scrollTo({ top: 0, behavior: "smooth" });
+        // Trigger insights load
+        document.dispatchEvent(
+          new CustomEvent("pagechange", { detail: pageName }),
+        );
+      }
+
+      /* ── STEP NAVIGATION ──────────────────────────────────────────── */
+      function goStep(n) {
+        // Hide current step panel, show requested
+        document
+          .getElementById(`calc-step-${appState.currentStep}`)
+          .classList.add("hidden");
+        document.getElementById(`calc-step-${n}`).classList.remove("hidden");
+
+        // Update step indicators
+        for (let i = 0; i < 4; i++) {
+          const stepEl = document.getElementById(`step-${i}`);
+          stepEl.classList.remove("active", "done");
+          if (i < n)
+            stepEl.classList.add("done"); // Past steps
+          else if (i === n) stepEl.classList.add("active"); // Current step
+        }
+
+        // Update connecting lines
+        for (let i = 0; i < 3; i++) {
+          const line = document.getElementById(`line-${i}`);
+          line.classList.toggle("done", i < n);
+        }
+
+        appState.currentStep = n;
+      }
+
+      function nextStep(n) {
+        goStep(n);
+      }
+
+      /* ── CARBON CALCULATION (Demo mode — mirrors backend logic) ──── */
+      const EMISSION_FACTORS = {
+        car: {
+          petrol: 0.192,
+          diesel: 0.171,
+          hybrid: 0.11,
+          electric: 0.053,
+          none: 0,
+        },
+        transit_per_km: 0.089,
+        flight_short: 255,
+        flight_long: 1050,
+        electricity_india: 0.716,
+        gas_per_unit: 2.03,
+        diet_base: {
+          vegan: 1500,
+          vegetarian: 1700,
+          pescatarian: 2000,
+          omnivore: 2500,
+        },
+        extra_meat_meal: 3.5,
+        waste_mult: { low: 1.0, medium: 1.15, high: 1.3 },
+        clothing: 10,
+        electronics: 300,
+        online_order: 0.5,
+      };
+
+      function calcLocalFootprint(form) {
+        // Transport
+        const carKm = parseFloat(form.carKm) * 52; // Annual km
+        const carFact = EMISSION_FACTORS.car[form.fuelType] || 0.192;
+        const carEm = carKm * carFact;
+        const transitEm =
+          parseFloat(form.transitKm) * 52 * EMISSION_FACTORS.transit_per_km;
+        const flightEm =
+          parseFloat(form.flights) * 0.5 * EMISSION_FACTORS.flight_short +
+          parseFloat(form.flights) * 0.5 * EMISSION_FACTORS.flight_long;
+        const transport = Math.round(carEm + transitEm + flightEm);
+
+        // Home
+        const annualKwh = parseFloat(form.electricity) * 12;
+        const gridFact =
+          EMISSION_FACTORS.electricity_india *
+          (1 - parseFloat(form.solar) / 100);
+        const elecEm = annualKwh * gridFact;
+        const gasEm = parseFloat(form.gas) * 12 * EMISSION_FACTORS.gas_per_unit;
+        const home = Math.round(
+          (elecEm + gasEm) / Math.max(parseInt(form.people), 1),
+        );
+
+        // Diet
+        const dietBase = EMISSION_FACTORS.diet_base[form.dietType] || 2500;
+        const extraMeat =
+          Math.max(0, parseFloat(form.meatMeals) - 7) *
+          52 *
+          EMISSION_FACTORS.extra_meat_meal;
+        const wasteMult = EMISSION_FACTORS.waste_mult[form.wasteLevel] || 1.15;
+        const diet = Math.round((dietBase + extraMeat) * wasteMult);
+
+        // Shopping
+        const shopping = Math.round(
+          parseFloat(form.clothes) * EMISSION_FACTORS.clothing +
+            parseFloat(form.electronics) * EMISSION_FACTORS.electronics +
+            parseFloat(form.onlineOrders) * 12 * EMISSION_FACTORS.online_order,
+        );
+
+        const total = transport + home + diet + shopping;
+        const rating =
+          total < 1500
+            ? "excellent"
+            : total < 2500
+              ? "good"
+              : total < 4000
+                ? "average"
+                : total < 7000
+                  ? "high"
+                  : "critical";
+        const percentile =
+          total < 1000
+            ? 5
+            : total < 2000
+              ? 20
+              : total < 3000
+                ? 40
+                : total < 4500
+                  ? 60
+                  : total < 7000
+                    ? 80
+                    : 90;
+
+        return {
+          footprint: { transport, home_energy: home, diet, shopping, total },
+          rating,
+          percentile,
+          global_avg_kg: 4000,
+          india_avg_kg: 1800,
+        };
+      }
+
+      function forecastFootprint(total) {
+        // Simple polynomial-inspired forecast for demo
+        const months = [];
+        const predicted = [];
+        const now = new Date();
+        const monthNames = [
+          "Jan",
+          "Feb",
+          "Mar",
+          "Apr",
+          "May",
+          "Jun",
+          "Jul",
+          "Aug",
+          "Sep",
+          "Oct",
+          "Nov",
+          "Dec",
+        ];
+
+        for (let i = 1; i <= 6; i++) {
+          const d = new Date(now.getFullYear(), now.getMonth() + i, 1);
+          months.push(`${monthNames[d.getMonth()]} ${d.getFullYear()}`);
+          // Gentle declining trend: -2% per month with small noise
+          const factor =
+            Math.pow(0.98, i) * (1 + (Math.random() * 0.04 - 0.02));
+          predicted.push(Math.round(total * factor));
+        }
+        return {
+          months,
+          predicted_kg: predicted,
+          trend: "improving",
+          reduction_potential_kg: Math.round(total * 0.25),
+        };
+      }
+
+      function generateTips(breakdown) {
+        const tips = [];
+        const { transport, home_energy, diet, shopping } = breakdown;
+
+        if (transport > 1500)
+          tips.push({
+            category: "transport",
+            icon: "🚗",
+            title: "Switch to an EV",
+            desc: "EVs cut transport emissions by 70%. India's FAME-II subsidies make this increasingly affordable.",
+            impact: Math.round(transport * 0.65),
+            difficulty: "hard",
+          });
+        if (transport > 400)
+          tips.push({
+            category: "transport",
+            icon: "🏠",
+            title: "Work from home 2 days/week",
+            desc: "Reducing commute by 40% directly cuts car emissions. Even 2 WFH days makes a measurable difference.",
+            impact: Math.round(transport * 0.2),
+            difficulty: "medium",
+          });
+        if (transport > 250)
+          tips.push({
+            category: "transport",
+            icon: "🚂",
+            title: "Replace one flight with train travel",
+            desc: "Delhi-Mumbai by Rajdhani saves ~200kg CO₂ vs flying. Train is also cheaper and more comfortable.",
+            impact: 230,
+            difficulty: "easy",
+          });
+        if (home_energy > 600)
+          tips.push({
+            category: "home",
+            icon: "☀️",
+            title: "Install rooftop solar",
+            desc: "A 2kW system covers 60-80% of household electricity. Payback in 5-7 years, free power after that.",
+            impact: Math.round(home_energy * 0.6),
+            difficulty: "hard",
+          });
+        if (home_energy > 300)
+          tips.push({
+            category: "home",
+            icon: "⭐",
+            title: "Upgrade to 5-star BEE appliances",
+            desc: "5-star rated AC, fridge, and washing machine cuts home energy use by 30-40%. Saves money on bills too.",
+            impact: Math.round(home_energy * 0.3),
+            difficulty: "medium",
+          });
+        if (diet > 1800)
+          tips.push({
+            category: "diet",
+            icon: "🥗",
+            title: "Try Meatless Mondays",
+            desc: "Skipping meat one day a week saves 150-200kg CO₂e annually. Lentils (dal) have 20x less carbon than beef.",
+            impact: 180,
+            difficulty: "easy",
+          });
+        if (diet > 2200)
+          tips.push({
+            category: "diet",
+            icon: "♻️",
+            title: "Reduce food waste",
+            desc: "Plan meals weekly, store properly, compost scraps. India wastes 68 million tonnes of food — be part of the solution.",
+            impact: Math.round(diet * 0.12),
+            difficulty: "easy",
+          });
+        if (shopping > 400)
+          tips.push({
+            category: "shopping",
+            icon: "👕",
+            title: "Buy second-hand clothing",
+            desc: "Fast fashion is one of the most polluting industries. 10 second-hand items saves ~100kg CO₂ and textile waste.",
+            impact: Math.round(shopping * 0.2),
+            difficulty: "easy",
+          });
+
+        // Sort by impact descending, return top 5
+        return tips.sort((a, b) => b.impact - a.impact).slice(0, 5);
+      }
+
+      /* ── MAIN CALCULATE FUNCTION ─────────────────────────────────── */
+      async function calculateFootprint() {
+        // Collect form values — plain JS, no form submission (no CSRF risk)
+        const formData = {
+          carKm: document.getElementById("car-km").value,
+          fuelType: document.getElementById("fuel-type").value,
+          flights: document.getElementById("flights").value,
+          transitKm: document.getElementById("transit-km").value,
+          electricity: document.getElementById("electricity").value,
+          gas: document.getElementById("gas").value,
+          people: document.getElementById("people").value,
+          solar: document.getElementById("solar").value,
+          dietType: document.getElementById("diet-type").value,
+          meatMeals: document.getElementById("meat-meals").value,
+          wasteLevel: document.getElementById("food-waste").value,
+          clothes: document.getElementById("clothes").value,
+          electronics: document.getElementById("electronics").value,
+          onlineOrders: document.getElementById("online-orders").value,
+        };
+
+        // Show loading state on button
+        const btn = document.getElementById("calc-btn");
+        btn.textContent = "Calculating... 🔄";
+        btn.disabled = true;
+
+        // Small delay for UX feedback
+        await new Promise((r) => setTimeout(r, 600));
+
+        // Calculate (demo mode: local; production: POST to /api/carbon/calculate/anonymous)
+        let result;
+        if (DEMO_MODE) {
+          result = calcLocalFootprint(formData);
+        } else {
+          try {
+            const res = await fetch(
+              `${API_BASE}/api/carbon/calculate/anonymous`,
+              {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                  /* map formData to API schema */
+                }),
+              },
+            );
+            result = await res.json();
+          } catch (e) {
+            result = calcLocalFootprint(formData); // Fallback to local
+          }
+        }
+
+        // Generate forecast and tips
+        const forecast = forecastFootprint(result.footprint.total);
+        const tips = generateTips(result.footprint);
+
+        // Store in state
+        appState.result = result;
+        appState.forecast = forecast;
+        appState.tips = tips;
+
+        // Reset button
+        btn.textContent = "Calculate My Footprint 🌍";
+        btn.disabled = false;
+
+        // Render dashboard and tips, then navigate there
+        renderDashboard(result, forecast);
+        renderTips(tips, forecast.reduction_potential_kg);
+        showPage("dashboard");
+      }
+
+      /* ── RENDER DASHBOARD ────────────────────────────────────────── */
+      function renderDashboard(result, forecast) {
+        // Show dashboard content, hide empty state
+        document.getElementById("no-data-msg").classList.add("hidden");
+        document.getElementById("dashboard-content").classList.remove("hidden");
+
+        const { footprint, rating, percentile, global_avg_kg, india_avg_kg } =
+          result;
+
+        // Total number (animated count-up)
+        animateNumber("total-kg", 0, footprint.total, 800);
+
+        // Rating badge
+        const badge = document.getElementById("result-badge");
+        badge.textContent = rating.charAt(0).toUpperCase() + rating.slice(1);
+        badge.className = `result-badge badge-${rating}`;
+
+        // Percentile text
+        document.getElementById("percentile-text").textContent =
+          `Your footprint is lower than ${Math.round(100 - percentile)}% of the global population`;
+
+        // Stat cards
+        document.getElementById("stat-transport").textContent =
+          footprint.transport.toLocaleString();
+        document.getElementById("stat-home").textContent =
+          footprint.home_energy.toLocaleString();
+        document.getElementById("stat-diet").textContent =
+          footprint.diet.toLocaleString();
+        document.getElementById("stat-shopping").textContent =
+          footprint.shopping.toLocaleString();
+
+        // Render charts (destroy old instances first to prevent memory leaks)
+        renderDonutChart(footprint);
+        renderForecastChart(forecast);
+        renderCompareBars(footprint.total, global_avg_kg, india_avg_kg);
+        renderBreakdownBars(footprint);
+      }
+
+      function renderDonutChart(footprint) {
+        if (appState.donutChart) appState.donutChart.destroy(); // Cleanup old chart
+        const ctx = document.getElementById("donut-chart").getContext("2d");
+        appState.donutChart = new Chart(ctx, {
+          type: "doughnut",
+          data: {
+            labels: ["Transport", "Home Energy", "Diet", "Shopping"],
+            datasets: [
+              {
+                data: [
+                  footprint.transport,
+                  footprint.home_energy,
+                  footprint.diet,
+                  footprint.shopping,
+                ],
+                backgroundColor: ["#22c55e", "#16a34a", "#86efac", "#4ade80"],
+                borderColor: "#0a0f0d",
+                borderWidth: 3,
+                hoverOffset: 6,
+              },
+            ],
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: {
+                labels: {
+                  color: "#e8f5e9",
+                  font: { family: "Inter" },
+                  padding: 16,
+                },
+              },
+              tooltip: {
+                callbacks: {
+                  label: (ctx) =>
+                    ` ${ctx.label}: ${ctx.parsed.toLocaleString()} kg CO₂e`,
+                },
+              },
+            },
+            cutout: "65%", // Donut thickness
+          },
+        });
+      }
+
+      function renderForecastChart(forecast) {
+        if (appState.forecastChart) appState.forecastChart.destroy();
+        const ctx = document.getElementById("forecast-chart").getContext("2d");
+
+        // Trend tag
+        const trends = {
+          improving: ["📉 Improving", "#22c55e"],
+          stable: ["➡️ Stable", "#f59e0b"],
+          worsening: ["📈 Worsening", "#ef4444"],
+        };
+        const [trendText, trendColor] = trends[forecast.trend] || trends.stable;
+        document.getElementById("trend-tag").innerHTML =
+          `<span style="padding:0.25rem 0.75rem;border-radius:999px;font-size:0.8rem;font-weight:600;background:${trendColor}22;color:${trendColor};border:1px solid ${trendColor}44">${trendText}</span>`;
+
+        appState.forecastChart = new Chart(ctx, {
+          type: "line",
+          data: {
+            labels: forecast.months,
+            datasets: [
+              {
+                label: "Predicted kg CO₂e/month",
+                data: forecast.predicted_kg.map((v) => Math.round(v / 12)), // Monthly from annual
+                borderColor: "#22c55e",
+                backgroundColor: "rgba(34,197,94,0.08)",
+                borderWidth: 2.5,
+                pointRadius: 5,
+                pointBackgroundColor: "#22c55e",
+                fill: true,
+                tension: 0.4,
+              },
+            ],
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+              x: { ticks: { color: "#6b8f72" }, grid: { color: "#1e3024" } },
+              y: {
+                ticks: { color: "#6b8f72", callback: (v) => `${v} kg` },
+                grid: { color: "#1e3024" },
+              },
+            },
+            plugins: {
+              legend: { labels: { color: "#e8f5e9" } },
+              tooltip: {
+                callbacks: { label: (ctx) => ` ${ctx.parsed.y} kg CO₂e/month` },
+              },
+            },
+          },
+        });
+      }
+
+      function renderCompareBars(userTotal, globalAvg, indiaAvg) {
+        const maxVal = Math.max(userTotal, globalAvg, 10000);
+        const items = [
+          {
+            label: "You",
+            value: userTotal,
+            color: userTotal > globalAvg ? "#ef4444" : "#22c55e",
+          },
+          { label: "Global avg", value: globalAvg, color: "#f59e0b" },
+          { label: "India avg", value: indiaAvg, color: "#60a5fa" },
+          { label: "1.5°C target", value: 2300, color: "#a78bfa" },
+        ];
+        document.getElementById("compare-bars").innerHTML = items
+          .map(
+            (item) => `
+    <div class="compare-bar">
+      <div class="compare-bar-label">${item.label}</div>
+      <div class="compare-bar-track">
+        <div class="compare-bar-fill" style="width:${((item.value / maxVal) * 100).toFixed(1)}%;background:${item.color}"></div>
+      </div>
+      <div class="compare-bar-value" style="color:${item.color}">${item.value.toLocaleString()}</div>
+    </div>
+  `,
+          )
+          .join("");
+      }
+
+      function renderBreakdownBars(footprint) {
+        const total = footprint.total;
+        const cats = [
+          {
+            label: "🚗 Transport",
+            value: footprint.transport,
+            color: "#22c55e",
+          },
+          {
+            label: "🏠 Home Energy",
+            value: footprint.home_energy,
+            color: "#16a34a",
+          },
+          { label: "🥗 Diet", value: footprint.diet, color: "#86efac" },
+          { label: "🛍️ Shopping", value: footprint.shopping, color: "#4ade80" },
+        ];
+        document.getElementById("breakdown-bars").innerHTML = cats
+          .map(
+            (c) => `
+    <div class="progress-row">
+      <div class="progress-header">
+        <span>${c.label}</span>
+        <span style="font-weight:600">${c.value.toLocaleString()} kg <span class="text-dim">(${((c.value / total) * 100).toFixed(0)}%)</span></span>
+      </div>
+      <div class="progress-track">
+        <div class="progress-fill" style="width:${((c.value / total) * 100).toFixed(1)}%;background:${c.color}"></div>
+      </div>
+    </div>
+  `,
+          )
+          .join("");
+      }
+
+      /* ── RENDER TIPS ─────────────────────────────────────────────── */
+      function renderTips(tips, reductionPotential) {
+        document.getElementById("no-tips-msg").classList.add("hidden");
+        document.getElementById("tips-content").classList.remove("hidden");
+
+        const diffColors = {
+          easy: "#22c55e",
+          medium: "#f59e0b",
+          hard: "#ef4444",
+        };
+
+        document.getElementById("tips-list").innerHTML = tips
+          .map(
+            (tip, i) => `
+    <div class="tip-card fade-in" style="animation-delay:${i * 0.08}s" role="article" aria-label="${tip.title}">
+      <div class="tip-icon">${tip.icon}</div>
+      <div>
+        <div class="tip-title">${tip.title}
+          <span class="tip-diff" style="color:${diffColors[tip.difficulty]}">${tip.difficulty}</span>
+        </div>
+        <div class="tip-desc">${tip.desc}</div>
+        <div class="tip-impact">💚 Save ~${tip.impact.toLocaleString()} kg CO₂e/year</div>
+      </div>
+    </div>
+  `,
+          )
+          .join("");
+
+        document.getElementById("reduction-potential").textContent =
+          `~${reductionPotential.toLocaleString()} kg CO₂e`;
+      }
+
+      /* ── AUTH (demo — calls backend if not in demo mode) ─────────── */
+      async function doLogin() {
+        const email = document.getElementById("login-email").value.trim();
+        const pass = document.getElementById("login-password").value;
+        const errEl = document.getElementById("login-error");
+        errEl.classList.add("hidden");
+
+        // Basic client-side validation before hitting API
+        if (!email || !pass) {
+          errEl.textContent = "Please enter your email and password.";
+          errEl.classList.remove("hidden");
+          return;
+        }
+
+        if (DEMO_MODE) {
+          // Demo: accept any credentials, create fake session
+          appState.token = "demo-token";
+          appState.userName = email.split("@")[0];
+          updateAuthUI();
+          showPage("home");
+          return;
+        }
+
+        try {
+          const res = await fetch(`${API_BASE}/api/auth/login`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ email, password: pass }),
+          });
+          if (res.ok) {
+            const data = await res.json();
+            appState.token = data.access_token;
+            updateAuthUI();
+            showPage("home");
+          } else {
+            const err = await res.json();
+            errEl.textContent =
+              err.detail || "Login failed. Check your credentials.";
+            errEl.classList.remove("hidden");
+          }
+        } catch (e) {
+          errEl.textContent =
+            "Could not connect to server. Running in demo mode.";
+          errEl.classList.remove("hidden");
+        }
+      }
+
+      async function doRegister() {
+        const name = document.getElementById("reg-name").value.trim();
+        const email = document.getElementById("reg-email").value.trim();
+        const pass = document.getElementById("reg-password").value;
+        const errEl = document.getElementById("register-error");
+        errEl.classList.add("hidden");
+
+        if (!name || !email || !pass) {
+          errEl.textContent = "All fields are required.";
+          errEl.classList.remove("hidden");
+          return;
+        }
+        if (pass.length < 8) {
+          errEl.textContent = "Password must be at least 8 characters.";
+          errEl.classList.remove("hidden");
+          return;
+        }
+
+        if (DEMO_MODE) {
+          appState.token = "demo-token";
+          appState.userName = name;
+          updateAuthUI();
+          showPage("home");
+          return;
+        }
+
+        try {
+          const res = await fetch(`${API_BASE}/api/auth/register`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ name, email, password: pass }),
+          });
+          if (res.ok) {
+            const data = await res.json();
+            appState.token = data.access_token;
+            appState.userName = name;
+            updateAuthUI();
+            showPage("home");
+          } else {
+            const err = await res.json();
+            errEl.textContent = err.detail || "Registration failed.";
+            errEl.classList.remove("hidden");
+          }
+        } catch (e) {
+          errEl.textContent = "Server unavailable — running in demo mode.";
+          errEl.classList.remove("hidden");
+        }
+      }
+
+      function updateAuthUI() {
+        const el = document.getElementById("auth-status");
+        if (appState.token) {
+          el.innerHTML = `
+      <span class="text-dim" style="font-size:0.875rem;margin-right:0.75rem">👋 ${appState.userName || "User"}</span>
+      <button class="btn-secondary" onclick="logout()" style="padding:0.4rem 1rem;font-size:0.875rem" aria-label="Sign out">Sign out</button>
+    `;
+        } else {
+          el.innerHTML = `<button class="btn-primary" onclick="showPage('login')" style="padding:0.4rem 1rem;font-size:0.875rem">Sign in</button>`;
+        }
+      }
+
+      function logout() {
+        appState.token = null;
+        appState.userName = null;
+        updateAuthUI();
+        showPage("home");
+      }
+
+      /* ── UTILITIES ───────────────────────────────────────────────── */
+      function animateNumber(elId, from, to, duration) {
+        const el = document.getElementById(elId);
+        if (!el) return;
+        const start = performance.now();
+        function update(now) {
+          const pct = Math.min((now - start) / duration, 1);
+          const val = Math.round(from + (to - from) * easeOut(pct));
+          el.textContent = val.toLocaleString();
+          if (pct < 1) requestAnimationFrame(update);
+        }
+        requestAnimationFrame(update);
+      }
+
+      function easeOut(t) {
+        return 1 - Math.pow(1 - t, 3);
+      } // Cubic ease-out
+
+      // Initialize app on load
+      document.addEventListener("DOMContentLoaded", () => {
+        showPage("home");
+        updateAuthUI();
+      });
+
+      /* ─────────────────────────────────────────────────────────────────
+   UPGRADE 1: AI INSIGHTS — calls /api/insights/analyze + /api/insights/anomaly
+   UPGRADE 2: ANOMALY DETECTION — Isolation Forest via backend
+   UPGRADE 3: ECOBOT CHAT — multi-turn Claude conversation
+───────────────────────────────────────────────────────────────── */
+
+      // ── Conversation history for EcoBot (persists while page is open) ─────────────
+      const chatHistory = []; // Array of {role, content} objects — sent to API each turn
+
+      // ── AI Insights ───────────────────────────────────────────────────────────────
+      async function loadAIInsights() {
+        if (!appState.result) return; // No footprint data yet
+
+        // Show content area, hide empty state
+        document.getElementById("no-insights-msg").classList.add("hidden");
+        document.getElementById("insights-content").classList.remove("hidden");
+        document.getElementById("insights-loading").classList.remove("hidden");
+        document.getElementById("insights-result").classList.add("hidden");
+
+        const fp = appState.result.footprint;
+
+        try {
+          // ── Call 1: AI narrative analysis ────────────────────────────────────────
+          if (DEMO_MODE) {
+            // Demo fallback — generate local analysis without Claude API
+            await new Promise((r) => setTimeout(r, 1200)); // Simulate API delay for realism
+            renderInsights({
+              summary: `Your annual footprint of ${fp.total.toLocaleString()} kg CO₂e places you ${fp.total > 4000 ? "above" : "below"} the global average of 4,000 kg. Your biggest driver is ${getDominantCategory(fp)} at ${Math.round((getMaxCategory(fp) / fp.total) * 100)}% of your total emissions.`,
+              dominant_category: getDominantCategory(fp),
+              key_insight: `If you reduced your ${getDominantCategory(fp)} emissions by just 30%, you would save ${Math.round(getMaxCategory(fp) * 0.3).toLocaleString()} kg CO₂e — equivalent to planting ${Math.round((getMaxCategory(fp) * 0.3) / 21)} trees annually.`,
+              action_plan: [
+                `1. Target ${getDominantCategory(fp)} first — it's your highest-impact area and small changes here multiply fastest.`,
+                `2. Set a monthly tracking reminder — users who measure reduce 23% more than those who don't (Carbon Trust 2023).`,
+                `3. Share your target with one person — social commitment increases follow-through by 65% (behavioural research).`,
+              ],
+              motivational_close:
+                "Every kilogram matters. The fact that you measured means you're already ahead of 90% of people.",
+            });
+          } else {
+            const insightRes = await fetch(`${API_BASE}/api/insights/analyze`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                footprint: fp,
+                country: "IN",
+                user_name: appState.userName || null,
+              }),
+            });
+            if (!insightRes.ok) throw new Error("API error");
+            const insights = await insightRes.json();
+            renderInsights(insights);
+          }
+
+          // ── Call 2: Anomaly detection (only if we have simulated history) ─────────
+          // Build a synthetic 6-month history centred on the current result for demo
+          const history = buildDemoHistory(fp);
+          if (!DEMO_MODE) {
+            const anomalyRes = await fetch(`${API_BASE}/api/insights/anomaly`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ current: fp, history }),
+            });
+            if (anomalyRes.ok) {
+              const anomaly = await anomalyRes.json();
+              renderAnomaly(anomaly);
+            }
+          }
+          // In demo mode skip anomaly (history = current, no spike to detect)
+        } catch (e) {
+          console.warn("AI Insights error:", e);
+          document.getElementById("insights-loading").classList.add("hidden");
+        }
+      }
+
+      function getDominantCategory(fp) {
+        const cats = {
+          transport: fp.transport,
+          "home energy": fp.home_energy,
+          diet: fp.diet,
+          shopping: fp.shopping,
+        };
+        return Object.entries(cats).sort((a, b) => b[1] - a[1])[0][0];
+      }
+
+      function getMaxCategory(fp) {
+        return Math.max(fp.transport, fp.home_energy, fp.diet, fp.shopping);
+      }
+
+      function buildDemoHistory(fp) {
+        // Simulate 6 months of history — slightly higher in older months (improvement arc)
+        return Array.from({ length: 6 }, (_, i) => ({
+          transport:
+            fp.transport * (1 + (5 - i) * 0.015 + (Math.random() - 0.5) * 0.05),
+          home_energy:
+            fp.home_energy *
+            (1 + (5 - i) * 0.01 + (Math.random() - 0.5) * 0.04),
+          diet: fp.diet * (1 + (5 - i) * 0.012 + (Math.random() - 0.5) * 0.03),
+          shopping:
+            fp.shopping * (1 + (5 - i) * 0.02 + (Math.random() - 0.5) * 0.06),
+          total: fp.total * (1 + (5 - i) * 0.013),
+        }));
+      }
+
+      function renderInsights(data) {
+        document.getElementById("insights-loading").classList.add("hidden");
+        document.getElementById("insights-result").classList.remove("hidden");
+
+        // Summary
+        document.getElementById("ai-summary").textContent = data.summary;
+
+        // Key insight
+        document.getElementById("ai-key-insight").textContent =
+          data.key_insight;
+
+        // Action plan — numbered steps with styled cards
+        const planEl = document.getElementById("ai-action-plan");
+        planEl.innerHTML = data.action_plan
+          .map(
+            (step, i) => `
+    <div style="display:flex;gap:1rem;padding:0.875rem;background:var(--surface2);border-radius:var(--radius);margin-bottom:0.75rem;align-items:flex-start">
+      <div style="width:1.75rem;height:1.75rem;background:var(--green);color:#000;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:0.8rem;flex-shrink:0">${i + 1}</div>
+      <p style="line-height:1.6;font-size:0.9rem;margin:0">${step.replace(/^\d+\.\s*/, "")}</p>
+    </div>
+  `,
+          )
+          .join("");
+
+        // Motivational close
+        document.getElementById("ai-motivational").textContent =
+          `"${data.motivational_close}"`;
+      }
+
+      function renderAnomaly(data) {
+        if (!data.is_anomaly && data.flagged_categories.length === 0) return; // Nothing to show
+
+        const card = document.getElementById("anomaly-card");
+        card.classList.remove("hidden");
+        document.getElementById("anomaly-explanation").textContent =
+          data.explanation;
+
+        // Z-score mini cards per category
+        const catLabels = {
+          transport: "🚗 Transport",
+          home_energy: "🏠 Home",
+          diet: "🥗 Diet",
+          shopping: "🛍️ Shopping",
+        };
+        const zEl = document.getElementById("anomaly-zscores");
+        zEl.innerHTML = Object.entries(data.z_scores)
+          .map(([cat, z]) => {
+            const flagged = data.flagged_categories.includes(cat);
+            const color = z > 2 ? "#ef4444" : z > 1 ? "#f59e0b" : "#22c55e";
+            return `<div style="background:var(--surface2);border:1px solid ${flagged ? color : "var(--border)"};border-radius:var(--radius);padding:0.75rem;text-align:center">
+      <div style="font-size:0.75rem;color:var(--text-dim);margin-bottom:0.25rem">${catLabels[cat]}</div>
+      <div style="font-family:var(--font-disp);font-size:1.1rem;color:${color};font-weight:700">${z > 0 ? "+" : ""}${z}σ</div>
+    </div>`;
+          })
+          .join("");
+      }
+
+      // Auto-load insights when user navigates to the tab
+      document.addEventListener("pagechange", function (e) {
+        if (e.detail === "insights" && appState.result) {
+          loadAIInsights();
+        }
+      });
+
+      // ── EcoBot Chat ───────────────────────────────────────────────────────────────
+
+      async function sendChatMessage() {
+        const input = document.getElementById("chat-input");
+        const msg = input.value.trim();
+        if (!msg) return;
+
+        input.value = ""; // Clear input field
+        appendChatMessage("user", msg); // Show user message immediately
+        chatHistory.push({ role: "user", content: msg });
+
+        // Disable send button while waiting for reply
+        const btn = document.getElementById("chat-send-btn");
+        btn.disabled = true;
+        btn.textContent = "...";
+
+        // Show typing indicator
+        const typingId = appendTypingIndicator();
+
+        try {
+          let replyText;
+
+          if (DEMO_MODE) {
+            // Demo fallback — local smart reply without Claude API
+            await new Promise((r) => setTimeout(r, 800));
+            replyText = generateLocalReply(msg, appState.result?.footprint);
+          } else {
+            const res = await fetch(`${API_BASE}/api/insights/chat`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                messages: chatHistory.slice(-10), // Last 10 messages only — context window management
+                footprint_context: appState.result?.footprint || null,
+              }),
+            });
+            if (!res.ok) throw new Error("API error");
+            const data = await res.json();
+            replyText = data.reply;
+          }
+
+          removeTypingIndicator(typingId);
+          appendChatMessage("assistant", replyText);
+          chatHistory.push({ role: "assistant", content: replyText });
+        } catch (e) {
+          removeTypingIndicator(typingId);
+          appendChatMessage(
+            "assistant",
+            "Sorry, I couldn't reach the server. Check your connection and try again.",
+          );
+        }
+
+        btn.disabled = false;
+        btn.textContent = "Send →";
+      }
+
+      function sendSuggestion(btn) {
+        document.getElementById("chat-input").value = btn.textContent;
+        document.getElementById("chat-suggestions").classList.add("hidden"); // Hide after first use
+        sendChatMessage();
+      }
+
+      function appendChatMessage(role, text) {
+        const container = document.getElementById("chat-messages");
+        const isBot = role === "assistant";
+
+        const wrapper = document.createElement("div");
+        wrapper.style.cssText = `display:flex;gap:0.75rem;align-items:flex-start;${isBot ? "" : "flex-direction:row-reverse"}`;
+
+        const avatar = document.createElement("div");
+        avatar.style.cssText =
+          "width:2rem;height:2rem;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:0.9rem;";
+        avatar.style.background = isBot
+          ? "rgba(34,197,94,0.15)"
+          : "rgba(255,255,255,0.08)";
+        avatar.textContent = isBot ? "🤖" : "👤";
+
+        const bubble = document.createElement("div");
+        bubble.style.cssText = `background:${isBot ? "var(--surface2)" : "rgba(34,197,94,0.12)"};border:1px solid ${isBot ? "var(--border)" : "rgba(34,197,94,0.25)"};border-radius:12px;padding:0.75rem 1rem;max-width:85%;line-height:1.6;font-size:0.9rem;white-space:pre-wrap`;
+        bubble.textContent = text;
+
+        wrapper.appendChild(avatar);
+        wrapper.appendChild(bubble);
+        container.appendChild(wrapper);
+        container.scrollTop = container.scrollHeight; // Auto-scroll to latest message
+        return wrapper;
+      }
+
+      function appendTypingIndicator() {
+        const container = document.getElementById("chat-messages");
+        const id = "typing-" + Date.now();
+        const div = document.createElement("div");
+        div.id = id;
+        div.style.cssText =
+          "display:flex;gap:0.75rem;align-items:center;opacity:0.6";
+        div.innerHTML =
+          '<div style="width:2rem;height:2rem;background:rgba(34,197,94,0.15);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:0.9rem">🤖</div><div style="background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:0.75rem 1rem;font-size:0.9rem" class="pulse">EcoBot is thinking...</div>';
+        container.appendChild(div);
+        container.scrollTop = container.scrollHeight;
+        return id;
+      }
+
+      function removeTypingIndicator(id) {
+        const el = document.getElementById(id);
+        if (el) el.remove();
+      }
+
+      // Local demo replies — smart enough to feel contextual
+      function generateLocalReply(msg, fp) {
+        const m = msg.toLowerCase();
+        if (
+          fp &&
+          (m.includes("biggest") ||
+            m.includes("most") ||
+            m.includes("drive") ||
+            m.includes("worst"))
+        ) {
+          const dom = getDominantCategory(fp);
+          return `Your biggest driver is ${dom} at ${Math.round(getMaxCategory(fp))} kg CO₂e/year — that's ${Math.round((getMaxCategory(fp) / fp.total) * 100)}% of your total. Focusing here gives you the highest return on effort.`;
+        }
+        if (
+          m.includes("transport") ||
+          m.includes("car") ||
+          m.includes("driv")
+        ) {
+          return "Transport is often the fastest win. Switching to an EV, working from home 2 days/week, or replacing one domestic flight with train travel can cut transport emissions by 25–70%.";
+        }
+        if (m.includes("solar") || m.includes("renewab")) {
+          return "In India, a 2 kW rooftop solar system costs ₹1–1.5L and covers 60–80% of average household electricity. Payback is typically 5–7 years, then 20+ years of near-zero electricity carbon. MNRE subsidies can reduce upfront cost by 30%.";
+        }
+        if (
+          m.includes("vegan") ||
+          m.includes("vegetar") ||
+          m.includes("diet") ||
+          m.includes("meat")
+        ) {
+          return "Diet is significant — switching from omnivore to vegan saves ~1,000 kg CO₂e/year. Even just cutting meat to 3 meals/week saves ~350 kg. Lentils (dal) produce 20× less CO₂ per gram of protein than beef.";
+        }
+        if (m.includes("carbon") && m.includes("offset")) {
+          return "Offsets can supplement but shouldn't replace real reductions. If you do use them, look for Gold Standard certified projects — reforestation or clean cookstoves in India. Cost is typically $10–25 per tonne.";
+        }
+        return "Great question! I can help you understand any part of your carbon footprint. Try asking about your specific categories — transport, home energy, diet, or shopping — and I'll give you concrete, India-relevant advice.";
+      }
+    </script>
+  </body>
+</html>

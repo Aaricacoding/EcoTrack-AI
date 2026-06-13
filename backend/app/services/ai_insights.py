@@ -3,30 +3,41 @@ import json
 import os
 from app.models.schemas import InsightRequest, InsightResponse, ChatRequest, ChatResponse, CategoryBreakdown
 
-_GEMINI_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent"
+_GROQ_URL = "https://api.groq.com/openai/v1/chat/completions"
+_MODEL = "llama-3.1-8b-instant"
 _GLOBAL_AVG_KG = 4000.0
 _INDIA_AVG_KG = 1800.0
 
 def _get_api_key() -> str:
-    key = os.getenv("GEMINI_API_KEY", "")
+    key = os.getenv("GROQ_API_KEY", "")
     if not key:
-        raise ValueError("GEMINI_API_KEY not set")
+        raise ValueError("GROQ_API_KEY not set")
     return key
 
-def _call_gemini(prompt: str, max_tokens: int = 800) -> str:
+def _call_groq(prompt: str, system: str = "", max_tokens: int = 800) -> str:
+    messages = []
+    if system:
+        messages.append({"role": "system", "content": system})
+    messages.append({"role": "user", "content": prompt})
+
     payload = {
-        "contents": [{"parts": [{"text": prompt}]}],
-        "generationConfig": {"maxOutputTokens": max_tokens, "temperature": 0.7}
+        "model": _MODEL,
+        "messages": messages,
+        "max_tokens": max_tokens,
+        "temperature": 0.7
     }
     with httpx.Client(timeout=30.0) as client:
         res = client.post(
-            f"{_GEMINI_URL}?key={_get_api_key()}",
+            _GROQ_URL,
             json=payload,
-            headers={"Content-Type": "application/json"}
+            headers={
+                "Content-Type": "application/json",
+                "Authorization": f"Bearer {_get_api_key()}"
+            }
         )
         res.raise_for_status()
         data = res.json()
-        return data["candidates"][0]["content"]["parts"][0]["text"].strip()
+        return data["choices"][0]["message"]["content"].strip()
 
 def _build_insight_prompt(req: InsightRequest) -> str:
     fp = req.footprint
@@ -36,8 +47,7 @@ def _build_insight_prompt(req: InsightRequest) -> str:
         key=lambda x: x[1]
     )[0]
     name_part = f"for {req.user_name}" if req.user_name else "for this user"
-    return f"""You are an expert climate scientist and personal carbon coach.
-Analyse this carbon footprint and return ONLY a JSON object — no markdown, no extra text.
+    return f"""Analyse this carbon footprint and return ONLY a JSON object — no markdown, no extra text.
 
 USER DATA:
 - Transport: {fp.transport:.0f} kg CO2e/year
@@ -71,7 +81,8 @@ async def generate_insights(req: InsightRequest) -> InsightResponse:
     )[0]
     try:
         prompt = _build_insight_prompt(req)
-        raw = _call_gemini(prompt)
+        system = "You are an expert climate scientist and personal carbon coach. Always respond with valid JSON only."
+        raw = _call_groq(prompt, system=system)
         if "```" in raw:
             raw = raw.split("```")[1]
             if raw.startswith("json"):
@@ -99,20 +110,30 @@ async def generate_insights(req: InsightRequest) -> InsightResponse:
 
 async def chat_with_ecobot(req: ChatRequest) -> ChatResponse:
     fp = req.footprint_context
-    context = ""
+    system = "You are EcoBot, an expert carbon footprint coach. Keep responses under 150 words, warm and actionable. Never make up statistics."
     if fp:
-        context = f"\nUser footprint: Transport {fp.transport:.0f}, Home {fp.home_energy:.0f}, Diet {fp.diet:.0f}, Shopping {fp.shopping:.0f}, Total {fp.total:.0f} kg CO2e/year (India avg: 1800, Global avg: 4000)"
+        system += f"\nUser footprint: Transport {fp.transport:.0f}, Home {fp.home_energy:.0f}, Diet {fp.diet:.0f}, Shopping {fp.shopping:.0f}, Total {fp.total:.0f} kg CO2e/year (India avg: 1800, Global avg: 4000)"
 
-    last_msg = req.messages[-1].content
-    full_prompt = f"""You are EcoBot, an expert carbon footprint coach.
-Keep responses under 150 words, warm and actionable.
-Never make up statistics.{context}
-
-User: {last_msg}
-EcoBot:"""
-
+    messages = [{"role": msg.role, "content": msg.content} for msg in req.messages]
+    payload = {
+        "model": _MODEL,
+        "messages": [{"role": "system", "content": system}] + messages,
+        "max_tokens": 300,
+        "temperature": 0.7
+    }
     try:
-        reply = _call_gemini(full_prompt, max_tokens=300)
-        return ChatResponse(reply=reply)
-    except Exception as e:
-        return ChatResponse(reply=f"I'm having trouble connecting right now. Please try again in a moment.")
+        with httpx.Client(timeout=30.0) as client:
+            res = client.post(
+                _GROQ_URL,
+                json=payload,
+                headers={
+                    "Content-Type": "application/json",
+                    "Authorization": f"Bearer {_get_api_key()}"
+                }
+            )
+            res.raise_for_status()
+            data = res.json()
+            reply = data["choices"][0]["message"]["content"].strip()
+            return ChatResponse(reply=reply)
+    except Exception:
+        return ChatResponse(reply="I'm having trouble connecting right now. Please try again in a moment.")

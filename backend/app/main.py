@@ -73,3 +73,16 @@ async def test_env():
         "gemini_key_set": gemini_key != "NOT SET",
         "gemini_key_preview": gemini_key[:10] + "..." if gemini_key != "NOT SET" else "NOT SET"
     }
+
+@app.get("/api/test-gemini")
+async def test_gemini():
+    import httpx, os
+    key = os.getenv("GEMINI_API_KEY", "")
+    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={key}"
+    payload = {"contents": [{"parts": [{"text": "Say hello in one word"}]}]}
+    try:
+        with httpx.Client(timeout=30.0) as client:
+            res = client.post(url, json=payload, headers={"Content-Type": "application/json"})
+            return {"status": res.status_code, "response": res.json()}
+    except Exception as e:
+        return {"error": str(e)}

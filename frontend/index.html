@@ -650,107 +650,55 @@
           transition: none !important;
         }
       }
+    
+      /* ── Hamburger & Mobile Nav ──────────────────────────────── */
+      .hamburger { display:none; flex-direction:column; justify-content:space-between; width:2rem; height:1.5rem; background:none; border:none; cursor:pointer; padding:0; z-index:200; }
+      .ham-line { display:block; width:100%; height:2px; background:var(--green); border-radius:2px; transition:all 0.3s ease; transform-origin:center; }
+      .hamburger.open .ham-line:nth-child(1) { transform:translateY(10px) rotate(45deg); }
+      .hamburger.open .ham-line:nth-child(2) { opacity:0; transform:scaleX(0); }
+      .hamburger.open .ham-line:nth-child(3) { transform:translateY(-10px) rotate(-45deg); }
+      .nav-overlay { position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:98; backdrop-filter:blur(2px); }
+      @media (max-width:768px) {
+        nav { flex-wrap:nowrap; }
+        .hamburger { display:flex; order:2; }
+        #auth-status { order:3; }
+        .nav-tabs { display:none; position:fixed; top:0; left:0; right:0; background:var(--surface); border-bottom:1px solid var(--border); padding:5rem 1.5rem 1.5rem; flex-direction:column; gap:0.25rem; z-index:99; box-shadow:0 8px 32px rgba(0,0,0,0.4); animation:slideDown 0.25s ease; }
+        .nav-tabs.mobile-open { display:flex; }
+        .nav-tab { width:100%; text-align:left; padding:0.75rem 1rem; font-size:0.95rem; }
+      }
+      @keyframes slideDown { from { opacity:0; transform:translateY(-10px); } to { opacity:1; transform:translateY(0); } }
+      .nav-tab:focus-visible, .hamburger:focus-visible, .btn-primary:focus-visible, .btn-secondary:focus-visible { outline:2px solid var(--green); outline-offset:2px; }
+
     </style>
   </head>
   <body>
     <div class="app" id="app">
-      <nav role="navigation" aria-label="Main navigation">
-        <div class="nav-logo" aria-label="EcoTrack AI home">
-          🌿 EcoTrack<span> AI</span>
+            <nav role="navigation" aria-label="Main navigation">
+        <div class="nav-logo" aria-label="EcoTrack AI home">🌿 EcoTrack<span> AI</span></div>
+
+        <button class="hamburger" id="hamburger-btn" aria-label="Toggle navigation menu" aria-expanded="false" aria-controls="nav-menu" onclick="toggleMobileNav()">
+          <span class="ham-line"></span>
+          <span class="ham-line"></span>
+          <span class="ham-line"></span>
+        </button>
+
+        <div class="nav-tabs" role="tablist" id="nav-menu">
+          <button class="nav-tab active" role="tab" onclick="showPage('home')"      id="tab-home"      aria-selected="true">Home</button>
+          <button class="nav-tab"        role="tab" onclick="showPage('calculate')" id="tab-calculate" aria-selected="false">Calculator</button>
+          <button class="nav-tab"        role="tab" onclick="showPage('dashboard')" id="tab-dashboard" aria-selected="false">Dashboard</button>
+          <button class="nav-tab"        role="tab" onclick="showPage('tips')"      id="tab-tips"      aria-selected="false">Tips</button>
+          <button class="nav-tab"        role="tab" onclick="showPage('insights')"  id="tab-insights"  aria-selected="false">&#129302; AI Insights</button>
+          <button class="nav-tab"        role="tab" onclick="showPage('chat')"      id="tab-chat"      aria-selected="false">&#128172; EcoBot</button>
+          <button class="nav-tab"        role="tab" onclick="showPage('scanner')"   id="tab-scanner"   aria-selected="false">&#128247; AR Scanner</button>
+          <button class="nav-tab"        role="tab" onclick="showPage('offset')"    id="tab-offset"    aria-selected="false">&#127807; Offset</button>
+          <button class="nav-tab"        role="tab" onclick="showPage('community')" id="tab-community" aria-selected="false">&#127758; Community</button>
         </div>
-        <div class="nav-tabs" role="tablist">
-          <button
-            class="nav-tab active"
-            role="tab"
-            onclick="showPage('home')"
-            id="tab-home"
-            aria-selected="true"
-          >
-            Home
-          </button>
-          <button
-            class="nav-tab"
-            role="tab"
-            onclick="showPage('calculate')"
-            id="tab-calculate"
-            aria-selected="false"
-          >
-            Calculator
-          </button>
-          <button
-            class="nav-tab"
-            role="tab"
-            onclick="showPage('dashboard')"
-            id="tab-dashboard"
-            aria-selected="false"
-          >
-            Dashboard
-          </button>
-          <button
-            class="nav-tab"
-            role="tab"
-            onclick="showPage('tips')"
-            id="tab-tips"
-            aria-selected="false"
-          >
-            Tips
-          </button>
-          <button
-            class="nav-tab"
-            role="tab"
-            onclick="showPage('insights')"
-            id="tab-insights"
-            aria-selected="false"
-          >
-            &#129302; AI Insights
-          </button>
-          <button
-            class="nav-tab"
-            role="tab"
-            onclick="showPage('chat')"
-            id="tab-chat"
-            aria-selected="false"
-          >
-            &#128172; EcoBot
-          </button>
-          <button
-            class="nav-tab"
-            role="tab"
-            onclick="showPage('scanner')"
-            id="tab-scanner"
-            aria-selected="false"
-          >
-            &#128247; AR Scanner
-          </button>
-          <button
-            class="nav-tab"
-            role="tab"
-            onclick="showPage('offset')"
-            id="tab-offset"
-            aria-selected="false"
-          >
-            &#127807; Offset
-          </button>
-          <button
-            class="nav-tab"
-            role="tab"
-            onclick="showPage('community')"
-            id="tab-community"
-            aria-selected="false"
-          >
-            &#127758; Community
-          </button>
-        </div>
+
         <div id="auth-status">
-          <button
-            class="btn-primary"
-            onclick="showPage('login')"
-            style="padding: 0.4rem 1rem; font-size: 0.875rem"
-          >
-            Sign in
-          </button>
+          <button class="btn-primary" onclick="showPage('login')" style="padding:0.4rem 1rem;font-size:0.875rem">Sign in</button>
         </div>
       </nav>
+      <div id="nav-overlay" class="nav-overlay hidden" onclick="closeMobileNav()"></div>
 
       <main id="main-content" role="main">
         <!-- HOME -->
@@ -3419,6 +3367,26 @@
           });
         }
       }
+    
+      /* ── Mobile Navigation ──────────────────────────────────── */
+      function toggleMobileNav() {
+        const menu=document.getElementById("nav-menu");
+        const btn=document.getElementById("hamburger-btn");
+        const overlay=document.getElementById("nav-overlay");
+        const isOpen=menu.classList.contains("mobile-open");
+        if(isOpen){closeMobileNav();}
+        else{menu.classList.add("mobile-open");btn.classList.add("open");btn.setAttribute("aria-expanded","true");overlay.classList.remove("hidden");document.body.style.overflow="hidden";}
+      }
+      function closeMobileNav() {
+        const menu=document.getElementById("nav-menu");
+        const btn=document.getElementById("hamburger-btn");
+        const overlay=document.getElementById("nav-overlay");
+        menu.classList.remove("mobile-open");btn.classList.remove("open");btn.setAttribute("aria-expanded","false");overlay.classList.add("hidden");document.body.style.overflow="";
+      }
+      const _origShowPageMobile=showPage;
+      function showPage(name){closeMobileNav();_origShowPageMobile(name);}
+      document.addEventListener("keydown",(e)=>{if(e.key==="Escape")closeMobileNav();});
+
     </script>
   </body>
 </html>

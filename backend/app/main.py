@@ -1,4 +1,6 @@
 # backend/app/main.py
+# Production-grade FastAPI entry point with strict CORS, security headers, rate limiting
+
 from contextlib import asynccontextmanager
 from fastapi import FastAPI, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
@@ -7,7 +9,8 @@ from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
 from app.core.config import get_settings
 from app.core.database import engine, Base
-from app.routers import auth, carbon, predictions, tips, insights
+from app.routers import auth, carbon, predictions, tips, insights, community
+app.include_router(community.router, prefix="/api/community", tags=["Community"])
 
 settings = get_settings()
 limiter = Limiter(key_func=get_remote_address)
@@ -36,14 +39,23 @@ async def add_security_headers(request: Request, call_next) -> Response:
     response.headers["X-Content-Type-Options"] = "nosniff"
     response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
     response.headers["Strict-Transport-Security"] = "max-age=63072000; includeSubDomains"
+    response.headers["Permissions-Policy"] = "geolocation=(), microphone=()"
     return response
+
+# CORS — specific origins from environment, not wildcard
+# Falls back to common dev origins if env var not set
+ALLOWED_ORIGINS = settings.ALLOWED_ORIGINS.split(",") if settings.ALLOWED_ORIGINS else [
+    "https://ecotracka-i.netlify.app",
+    "http://localhost:5173",
+    "http://localhost:8000",
+]
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=settings.ALLOWED_ORIGINS.split(","),
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_origins=ALLOWED_ORIGINS,        # Strict allowlist — never wildcard in prod
+    allow_credentials=True,               # Allow Authorization header
+    allow_methods=["GET", "POST"],        # Only methods the API actually uses
+    allow_headers=["Authorization", "Content-Type"],  # Explicit header allowlist
 )
 
 app.include_router(auth.router,        prefix="/api/auth",        tags=["Authentication"])

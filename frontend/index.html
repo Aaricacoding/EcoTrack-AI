@@ -3486,13 +3486,12 @@
           errEl.classList.remove("hidden");
         }
       }
-
       function updateAuthUI() {
         const el = document.getElementById("auth-status");
         if (appState.token) {
           el.innerHTML = `<span class="text-dim" style="font-size:0.875rem;margin-right:0.75rem">👋 ${appState.userName || "User"}</span><button class="btn-secondary" onclick="logout()" style="padding:0.4rem 1rem;font-size:0.875rem">Sign out</button>`;
         } else {
-          el.innerHTML = `<button class="btn-primary" onclick="navTo('login')" style="padding:0.4rem 1rem;font-size:0.875rem">Sign in</button>`;
+          el.innerHTML = `<button class="btn-secondary" onclick="navTo('register')" style="padding:0.4rem 1rem;font-size:0.875rem;margin-right:0.5rem">Sign up</button><button class="btn-primary" onclick="navTo('login')" style="padding:0.4rem 1rem;font-size:0.875rem">Sign in</button>`;
         }
       }
       function logout() {

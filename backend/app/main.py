@@ -45,7 +45,7 @@ async def add_security_headers(request: Request, call_next) -> Response:
 # CORS — specific origins from environment, not wildcard
 # Falls back to common dev origins if env var not set
 ALLOWED_ORIGINS = settings.ALLOWED_ORIGINS.split(",") if settings.ALLOWED_ORIGINS else [
-    "https://ecotracka-i.netlify.app",
+    "https://eco-track-ai-three.vercel.app",
     "http://localhost:5173",
     "http://localhost:8000",
 ]

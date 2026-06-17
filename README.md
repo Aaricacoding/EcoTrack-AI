@@ -18,9 +18,8 @@ pinned: false
 [![Tests](https://img.shields.io/badge/tests-43%20passing-brightgreen)](#testing)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow)](LICENSE)
 
-**🔗 Live Demo**: https://ecotracka-i.netlify.app
+**🔗 Live Demo**: https://eco-track-ai-three.vercel.app
 **⚙️ Backend API**: https://aaricacoding-ecotrack-ai.hf.space
-**💻 GitHub**: https://github.com/Aaricacoding/EcoTrack-AI
 
 ---
 

@@ -32,6 +32,9 @@ jobs:
           pip install -r backend/requirements.txt
 
       - name: Run unit tests with coverage
+        env:
+          SECRET_KEY: "dummy_secret_key_for_ci_tests_only_32_chars"
+          GROQ_API_KEY: "dummy"
         run: |
           cd backend
           pytest tests/ -v --tb=short --cov=app --cov-report=term-missing

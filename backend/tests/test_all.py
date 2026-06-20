@@ -439,3 +439,46 @@ class TestInsightSchemas:
                 current=_make_breakdown(),
                 history=[_make_breakdown(), _make_breakdown()],
             )
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# TEST CLASS 11: Password Complexity Validation
+# ═══════════════════════════════════════════════════════════════════════════════
+
+class TestPasswordComplexity:
+
+    def test_no_uppercase_rejected(self) -> None:
+        """Password with no uppercase letter must raise ValidationError."""
+        from app.models.schemas import UserRegisterRequest
+        with pytest.raises(ValidationError):
+            UserRegisterRequest(name="Test User", email="t1@example.com", password="lowercase1!")
+
+    def test_no_lowercase_rejected(self) -> None:
+        """Password with no lowercase letter must raise ValidationError."""
+        from app.models.schemas import UserRegisterRequest
+        with pytest.raises(ValidationError):
+            UserRegisterRequest(name="Test User", email="t2@example.com", password="UPPERCASE1!")
+
+    def test_no_digit_rejected(self) -> None:
+        """Password with no digit must raise ValidationError."""
+        from app.models.schemas import UserRegisterRequest
+        with pytest.raises(ValidationError):
+            UserRegisterRequest(name="Test User", email="t3@example.com", password="NoDigitsHere!")
+
+    def test_no_special_char_rejected(self) -> None:
+        """Password with no special character must raise ValidationError."""
+        from app.models.schemas import UserRegisterRequest
+        with pytest.raises(ValidationError):
+            UserRegisterRequest(name="Test User", email="t4@example.com", password="NoSpecial123")
+
+    def test_common_password_rejected_even_if_complex(self) -> None:
+        """A common password must be rejected even if it satisfies character-class rules."""
+        from app.models.schemas import UserRegisterRequest
+        with pytest.raises(ValidationError):
+            UserRegisterRequest(name="Test User", email="t5@example.com", password="Password1!")
+
+    def test_strong_password_accepted(self) -> None:
+        """A genuinely strong, non-common password must be accepted."""
+        from app.models.schemas import UserRegisterRequest
+        req = UserRegisterRequest(name="Test User", email="t6@example.com", password="Kx9!mPq2vL")
+        assert req.password == "Kx9!mPq2vL"
+

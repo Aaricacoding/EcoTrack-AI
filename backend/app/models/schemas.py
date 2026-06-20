@@ -25,6 +25,51 @@ class UserRegisterRequest(BaseModel):
     email: EmailStr
     password: str = Field(..., min_length=8, max_length=128)
 
+
+    @field_validator("password")
+    @classmethod
+    def password_meets_complexity(cls, v: str) -> str:
+        """
+        Enforce industry-standard password complexity.
+
+        Requires, in addition to the min_length=8 already set on the field:
+          - at least one uppercase letter (A-Z)
+          - at least one lowercase letter (a-z)
+          - at least one digit (0-9)
+          - at least one special character (non-alphanumeric)
+
+        Also rejects an expanded list of common/breached passwords that
+        would technically pass the character-class rules above but are
+        still trivially guessable (e.g. "Password1!").
+        """
+        errors = []
+
+        if not re.search(r"[A-Z]", v):
+            errors.append("one uppercase letter")
+        if not re.search(r"[a-z]", v):
+            errors.append("one lowercase letter")
+        if not re.search(r"\d", v):
+            errors.append("one digit")
+        if not re.search(r"[^A-Za-z0-9]", v):
+            errors.append("one special character")
+
+        if errors:
+            raise ValueError(
+                "Password must contain at least " + ", ".join(errors)
+            )
+
+        # Block common passwords even if they technically satisfy the
+        # character-class rules above (case-insensitive match).
+        common_passwords = {
+            "password", "password1", "password123", "12345678",
+            "qwerty123", "qwertyui", "letmein1", "welcome1",
+            "admin123", "iloveyou1", "p@ssword", "passw0rd",
+            "password1!", "qwerty12!", "abc12345", "trustno1",
+        }
+        if v.lower() in common_passwords:
+            raise ValueError("Password is too common — choose a less predictable password")
+
+        return v
     @field_validator("name")
     @classmethod
     def name_safe_chars(cls, v: str) -> str:
@@ -45,11 +90,47 @@ class UserRegisterRequest(BaseModel):
 
     @field_validator("password")
     @classmethod
-    def password_not_trivial(cls, v: str) -> str:
-        """Reject passwords that are obviously weak."""
-        trivial = {"password", "12345678", "password1", "qwerty123"}
-        if v.lower() in trivial:
-            raise ValueError("Password is too common")
+    def password_meets_complexity(cls, v: str) -> str:
+        """
+        Enforce industry-standard password complexity.
+
+        Requires, in addition to the min_length=8 already set on the field:
+          - at least one uppercase letter (A-Z)
+          - at least one lowercase letter (a-z)
+          - at least one digit (0-9)
+          - at least one special character (non-alphanumeric)
+
+        Also rejects an expanded list of common/breached passwords that
+        would technically pass the character-class rules above but are
+        still trivially guessable (e.g. "Password1!").
+        """
+        errors = []
+
+        if not re.search(r"[A-Z]", v):
+            errors.append("one uppercase letter")
+        if not re.search(r"[a-z]", v):
+            errors.append("one lowercase letter")
+        if not re.search(r"\d", v):
+            errors.append("one digit")
+        if not re.search(r"[^A-Za-z0-9]", v):
+            errors.append("one special character")
+
+        if errors:
+            raise ValueError(
+                "Password must contain at least " + ", ".join(errors)
+            )
+
+        # Block common passwords even if they technically satisfy the
+        # character-class rules above (case-insensitive match).
+        common_passwords = {
+            "password", "password1", "password123", "12345678",
+            "qwerty123", "qwertyui", "letmein1", "welcome1",
+            "admin123", "iloveyou1", "p@ssword", "passw0rd",
+            "password1!", "qwerty12!", "abc12345", "trustno1",
+        }
+        if v.lower() in common_passwords:
+            raise ValueError("Password is too common — choose a less predictable password")
+
         return v
 
 

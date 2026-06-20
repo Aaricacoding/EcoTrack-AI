@@ -55,7 +55,7 @@ def registered_token():
     res = client.post("/api/auth/register", json={
         "name": "Test User",
         "email": "integration@test.com",
-        "password": "testpassword123"
+        "password": "TestPass123!"
     })
     assert res.status_code == 201
     return res.json()["access_token"]
@@ -99,7 +99,7 @@ class TestAuthEndpoints:
         res = client.post("/api/auth/register", json={
             "name": "New User",
             "email": "newuser@test.com",
-            "password": "securepass123"
+            "password": "SecurePass1!"
         })
         assert res.status_code == 201
         data = res.json()
@@ -108,7 +108,7 @@ class TestAuthEndpoints:
 
     def test_register_duplicate_email_rejected(self) -> None:
         """Registering same email twice must return 400."""
-        payload = {"name": "Dup User", "email": "dup@test.com", "password": "password123"}
+        payload = {"name": "Dup User", "email": "dup@test.com", "password": "Password123!"}
         client.post("/api/auth/register", json=payload)   # First registration
         res = client.post("/api/auth/register", json=payload)  # Duplicate
         assert res.status_code == 400
@@ -125,7 +125,7 @@ class TestAuthEndpoints:
         """POST /api/auth/login with valid credentials must return JWT."""
         res = client.post("/api/auth/login", json={
             "email": "integration@test.com",
-            "password": "testpassword123"
+            "password": "TestPass123!"
         })
         assert res.status_code == 200
         assert "access_token" in res.json()

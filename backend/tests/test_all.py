@@ -28,7 +28,7 @@ from app.services.carbon_calculator import (
     get_percentile,
 )
 from app.services.ml_predictor import predict_future_footprint, generate_tips
-from app.models.schemas import (
+from app.models.schemas_hardened import (
     TransportData, HomeEnergyData, DietData, ShoppingData,
     CarbonInputFull, CategoryBreakdown,
 )
@@ -329,12 +329,12 @@ class TestSecurity:
 # ═══════════════════════════════════════════════════════════════════════════════
 
 from app.services.anomaly_detector import detect_anomaly
-from app.models.schemas import AnomalyRequest, AnomalyResult
+from app.models.schemas_hardened import AnomalyRequest, AnomalyResult
 
 
 def _make_breakdown(transport=2000, home=600, diet=2500, shopping=400):
     """Helper — build a CategoryBreakdown with keyword args for readability."""
-    from app.models.schemas import CategoryBreakdown
+    from app.models.schemas_hardened import CategoryBreakdown
     total = transport + home + diet + shopping
     return CategoryBreakdown(
         transport=float(transport), home_energy=float(home),
@@ -358,20 +358,18 @@ class TestAnomalyDetection:
 
     def test_normal_reading_not_flagged(self, normal_history) -> None:
         """A reading consistent with history must NOT be flagged as anomaly."""
-        current = _make_breakdown(2010, 600, 2500, 400)   # Within normal range
+        current = _make_breakdown(2010, 600, 2500, 400)
         req = AnomalyRequest(current=current, history=normal_history)
         result = detect_anomaly(req)
-        # With consistent history, a normal reading should not be anomalous
         assert isinstance(result, AnomalyResult)
-        assert result.anomaly_score is not None             # Score always present
+        assert result.anomaly_score is not None
 
     def test_massive_spike_flagged(self, normal_history) -> None:
-        """A reading with 5× normal transport must be detected as anomaly."""
+        """A reading with 5x normal transport must be detected as anomaly."""
         current = _make_breakdown(transport=12000, home=600, diet=2500, shopping=400)
         req = AnomalyRequest(current=current, history=normal_history)
         result = detect_anomaly(req)
-        # Transport z-score should be very high — at least flagged or very high score
-        assert result.z_scores["transport"] > 3.0          # >3 std devs above mean
+        assert result.z_scores["transport"] > 3.0
 
     def test_z_scores_all_categories_present(self, normal_history) -> None:
         """AnomalyResult must always include z-scores for all 4 categories."""
@@ -394,12 +392,12 @@ class TestAnomalyDetection:
         current = _make_breakdown(2000, 600, 2500, 400)
         req = AnomalyRequest(current=current, history=normal_history)
         result = detect_anomaly(req)
-        assert len(result.explanation) > 10                 # At least a meaningful sentence
+        assert len(result.explanation) > 10
 
     def test_flagged_categories_subset_of_valid(self, normal_history) -> None:
         """flagged_categories must only contain valid category names."""
         valid = {"transport", "home_energy", "diet", "shopping"}
-        current = _make_breakdown(9000, 5000, 2500, 400)   # Two huge spikes
+        current = _make_breakdown(9000, 5000, 2500, 400)
         req = AnomalyRequest(current=current, history=normal_history)
         result = detect_anomaly(req)
         assert all(c in valid for c in result.flagged_categories)
@@ -413,7 +411,7 @@ class TestInsightSchemas:
 
     def test_insight_request_valid(self) -> None:
         """InsightRequest must accept valid breakdown + country."""
-        from app.models.schemas import InsightRequest
+        from app.models.schemas_hardened import InsightRequest
         req = InsightRequest(
             footprint=_make_breakdown(2000, 600, 2500, 400),
             country="IN",
@@ -424,13 +422,13 @@ class TestInsightSchemas:
 
     def test_chat_message_empty_content_rejected(self) -> None:
         """ChatMessage with empty content must raise ValidationError."""
-        from app.models.schemas import ChatMessage
+        from app.models.schemas_hardened import ChatMessage
         with pytest.raises(ValidationError):
             ChatMessage(role="user", content="")
 
     def test_chat_request_requires_at_least_one_message(self) -> None:
         """ChatRequest with empty messages list must raise ValidationError."""
-        from app.models.schemas import ChatRequest, ChatMessage
+        from app.models.schemas_hardened import ChatRequest, ChatMessage
         with pytest.raises(ValidationError):
             ChatRequest(messages=[])
 
@@ -439,5 +437,5 @@ class TestInsightSchemas:
         with pytest.raises(ValidationError):
             AnomalyRequest(
                 current=_make_breakdown(),
-                history=[_make_breakdown(), _make_breakdown()],   # Only 2 — needs min 3
+                history=[_make_breakdown(), _make_breakdown()],
             )

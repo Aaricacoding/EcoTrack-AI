@@ -86,6 +86,15 @@ ecotrack-ai/
 
 ---
 
+## 📊 Data Analysis
+
+Exploratory analysis of carbon footprint tracking data across 120 users and 180 days.
+Covers monthly emission trends, MoM change, user profile distributions, anomaly detection review, and weekday patterns.
+
+See [`notebooks/EcoTrack_Analysis.ipynb`](notebooks/EcoTrack_Analysis.ipynb)
+
+---
+
 ## Quick Start
 
 ```bash
@@ -129,16 +138,16 @@ pytest backend/tests/ -v --tb=short
 
 Robust security controls implemented across the API surface:
 
-* **JWT Authentication:** Strict token lifecycle management.
-* **Authorization Checks:** Ownership validation on private resources (e.g., IDOR prevention).
-* **bcrypt Password Hashing:** Salted and hashed credentials via passlib.
-* **Input Validation:** Strict Pydantic v2 schemas and payload sanitization.
-* **Rate Limiting:** IP-based throttles via `slowapi` on auth, AI, and ML endpoints.
-* **Content Security Policy (CSP):** `default-src 'none'` API policy.
-* **HSTS Headers:** Enforced Strict-Transport-Security.
-* **SQL Injection Protection:** Pure SQLAlchemy ORM bindings.
-* **Environment Secret Management:** Startup `.env` validation block.
-* **Global Exception Handling:** Stack trace redaction and opaque 500 JSON responses.
+- **JWT Authentication:** Strict token lifecycle management.
+- **Authorization Checks:** Ownership validation on private resources (e.g., IDOR prevention).
+- **bcrypt Password Hashing:** Salted and hashed credentials via passlib.
+- **Input Validation:** Strict Pydantic v2 schemas and payload sanitization.
+- **Rate Limiting:** IP-based throttles via `slowapi` on auth, AI, and ML endpoints.
+- **Content Security Policy (CSP):** `default-src 'none'` API policy.
+- **HSTS Headers:** Enforced Strict-Transport-Security.
+- **SQL Injection Protection:** Pure SQLAlchemy ORM bindings.
+- **Environment Secret Management:** Startup `.env` validation block.
+- **Global Exception Handling:** Stack trace redaction and opaque 500 JSON responses.
 
 ---
 
@@ -146,11 +155,11 @@ Robust security controls implemented across the API surface:
 
 The backend is backed by a robust, 100% passing test suite designed for stability and evaluation compliance.
 
-*   **Unit Tests:** Validating calculators, parsers, and utilities.
-*   **Integration Tests:** End-to-end database interactions and auth flows.
-*   **Security Tests:** Verifying bcrypt hashing, JWT tampering, and bounds rejection.
-*   **ML Tests:** Validating deterministic anomaly detection and positive regression forecasts.
-*   **API Tests:** Endpoint contract validation and error handling.
+- **Unit Tests:** Validating calculators, parsers, and utilities.
+- **Integration Tests:** End-to-end database interactions and auth flows.
+- **Security Tests:** Verifying bcrypt hashing, JWT tampering, and bounds rejection.
+- **ML Tests:** Validating deterministic anomaly detection and positive regression forecasts.
+- **API Tests:** Endpoint contract validation and error handling.
 
 | Category                 | Coverage / Focus                           |
 | ------------------------ | ------------------------------------------ |
@@ -172,23 +181,23 @@ The backend is backed by a robust, 100% passing test suite designed for stabilit
 
 The frontend SPA implements inclusive design principles:
 
-* **Semantic HTML5:** Proper heading hierarchy and landmark elements implemented.
-* **ARIA Labels:** Interactive elements tagged for screen reader context.
-* **Keyboard Navigation:** Tab-index support for forms and dashboard tabs.
-* **Responsive Design:** Mobile-first media queries for seamless mobile/desktop usage.
-* *Screen Reader Support:* (Standard browser support; advanced custom roles omitted for lightweight design).
-* *High Contrast Compatibility:* (Pending explicit high-contrast toggle; native OS inversion supported).
+- **Semantic HTML5:** Proper heading hierarchy and landmark elements implemented.
+- **ARIA Labels:** Interactive elements tagged for screen reader context.
+- **Keyboard Navigation:** Tab-index support for forms and dashboard tabs.
+- **Responsive Design:** Mobile-first media queries for seamless mobile/desktop usage.
+- _Screen Reader Support:_ (Standard browser support; advanced custom roles omitted for lightweight design).
+- _High Contrast Compatibility:_ (Pending explicit high-contrast toggle; native OS inversion supported).
 
 ---
 
 ## Performance Optimizations
 
-* **SQL query limits:** Capped row fetches (e.g., `limit(1000)`) preventing memory exhaustion.
-* **Cached configuration via @lru_cache:** Single-parse environment variable loading.
-* **Optimized SQLAlchemy queries:** Minimized N+1 problems via targeted aggregations.
-* **Rate-limited AI endpoints:** Prevents API quota exhaustion via Groq.
-* **Efficient ML inference:** Lightweight scikit-learn models executed efficiently.
-* **Lightweight frontend architecture:** Single-file Vanilla JS SPA minimizes asset payload.
+- **SQL query limits:** Capped row fetches (e.g., `limit(1000)`) preventing memory exhaustion.
+- **Cached configuration via @lru_cache:** Single-parse environment variable loading.
+- **Optimized SQLAlchemy queries:** Minimized N+1 problems via targeted aggregations.
+- **Rate-limited AI endpoints:** Prevents API quota exhaustion via Groq.
+- **Efficient ML inference:** Lightweight scikit-learn models executed efficiently.
+- **Lightweight frontend architecture:** Single-file Vanilla JS SPA minimizes asset payload.
 
 ---
 
